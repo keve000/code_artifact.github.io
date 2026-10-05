@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホース納品・売上管理ツール</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+    </style>
+</head>
+<body class="text-gray-800 p-4 md:p-8 max-w-4xl mx-auto">
+    
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold text-gray-900">ホース納品管理</h1>
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center bg-white rounded shadow px-2 py-1">
+                <span class="text-gray-500 text-sm mr-2">📅 対象月:</span>
+                <input type="month" id="monthSelector" class="border-none bg-transparent outline-none cursor-pointer font-bold text-lg" onchange="changeMonth()">
+            </div>
+            <button onclick="returnToCurrentMonth()" class="text-blue-600 hover:text-blue-800 bg-blue-50 border border-blue-200 py-1.5 px-3 rounded shadow-sm text-sm font-bold transition-colors hidden md:block" id="btnCurrentMonth">
+                今月へ戻る
+            </button>
+            <button onclick="openSettings()" class="text-gray-500 hover:text-gray-700 bg-white py-1.5 px-3 rounded shadow text-sm font-bold flex items-center">
+                ⚙️ 設定
+            </button>
+        </div>
+    </header>
+
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Progress -->
+        <div class="bg-white p-6 rounded-lg shadow relative h-fit">
+            <h2 class="text-lg font-semibold mb-2"><span id="titleMonthProgress">今月</span>の売上状況</h2>
+            <div class="text-3xl font-bold text-blue-600 mb-2">¥<span id="displayTotal">0</span></div>
+            <p class="text-sm text-gray-500 mb-4">月間目標: ¥<span id="displayTargetMin">35,000</span> 〜 ¥<span id="displayTargetMax">40,000</span></p>
+            
+            <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
+                <div id="progressBar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <p id="remainingText" class="text-sm font-medium text-red-500">目標まであと: ¥35,000</p>
+        </div>
+
+        <!-- Predictions -->
+        <div class="bg-white p-6 rounded-lg shadow h-fit">
+            <h2 class="text-lg font-semibold mb-4">💡 目安と提案</h2>
+            
+            <!-- Take Home Suggestion -->
+            <div class="bg-green-50 p-4 rounded-lg mb-4 border border-green-200">
+                <h3 class="text-sm font-bold text-green-800 mb-2">📦 次回、持って帰る量（1回分）</h3>
+                
+                <div class="mb-4">
+                    <h4 class="text-xs font-semibold text-green-700 bg-green-100 inline-block px-2 py-1 rounded mb-2">【基本】いつものペース</h4>
+                    <div id="takeHomeSuggest" class="text-green-900 leading-relaxed pl-2 border-l-2 border-green-300">
+                        データがありません
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-semibold text-yellow-700 bg-yellow-100 inline-block px-2 py-1 rounded mb-2">【代案】8円がもらえなかった場合</h4>
+                    <div id="takeHomeSuggestNo8" class="text-yellow-900 leading-relaxed pl-2 border-l-2 border-yellow-300">
+                        データがありません
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly -->
+            <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-100">
+                <h3 class="text-sm font-bold text-blue-800">📅 1週間の納品ペース</h3>
+                <p class="text-sm text-blue-900 mt-1" id="paceNormal">データがありません</p>
+            </div>
+
+            <!-- Total only 4.5 -->
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h3 class="text-sm font-bold text-red-800 mb-1">🎯 残りすべて4.5円で目標達成する場合</h3>
+                <p class="text-xs text-red-700 mb-2">今月の目標達成までに必要な【合計】の束数・本数です。</p>
+                <div id="totalRemainingOnly45" class="text-red-900 leading-relaxed pl-2 border-l-2 border-red-300">
+                    データがありません
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Input & History -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Input Form -->
+        <div class="md:col-span-1 bg-white p-6 rounded-lg shadow h-fit">
+            <h2 class="text-lg font-semibold mb-4">納品を記録</h2>
+            <form id="recordForm" onsubmit="addRecord(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">日付</label>
+                    <input type="date" id="inputDate" required class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">8円の束 (1束60本=480円)</label>
+                    <input type="number" id="input8" min="0" value="0" class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">4.5円の束 (1束80本=360円)</label>
+                    <input type="number" id="input45" min="0" value="0" class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                    記録を追加する
+                </button>
+            </form>
+        </div>
+
+        <!-- History -->
+        <div class="md:col-span-2 bg-white p-6 rounded-lg shadow overflow-hidden">
+            <h2 class="text-lg font-semibold mb-4"><span id="titleMonthHistory">今月</span>の履歴</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
+                            <th class="py-3 px-4 text-left">日付</th>
+                            <th class="py-3 px-4 text-center">8円(束)</th>
+                            <th class="py-3 px-4 text-center">4.5円(束)</th>
+                            <th class="py-3 px-4 text-right">金額</th>
+                            <th class="py-3 px-4 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable" class="text-gray-600 font-light">
+                        <!-- Records will be injected here -->
+                    </tbody>
+                </table>
+                <div id="noDataMsg" class="text-center py-4 text-gray-500 hidden">記録がありません</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+            <h2 class="text-xl font-bold mb-4"><span id="settingsModalTitle"></span>月の目標設定</h2>
+            <p class="text-xs text-gray-500 mb-4">※ここで保存した設定は、現在選択中の月に適用されます。</p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">月間目標 (最低ライン)</label>
+                <input type="number" id="settingTargetMin" step="1000" class="w-full border-gray-300 border rounded p-2">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">月間目標 (上限)</label>
+                <input type="number" id="settingTargetMax" step="1000" class="w-full border-gray-300 border rounded p-2">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">納品する曜日</label>
+                <div class="flex flex-wrap gap-3">
+                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="0" class="mr-1"> 日</label>
+                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="1" class="mr-1"> 月</label>
+                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="2" class="mr-1"> 火</label>
+                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="3" class="mr-1"> 水</label>
+                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="4" class="mr-1"> 木</label>
+                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="5" class="mr-1"> 金</label>
+                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="6" class="mr-1"> 土</label>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeSettings()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">キャンセル</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            monthlySettings: {}, 
+            records: []
+        };
+
+        let lastCheckedMonth = "";
+        let lastCheckedDate = "";
+
+        function init() {
+            const saved = localStorage.getItem('hoseData');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state.records = parsed.records || [];
+                
+                if (parsed.monthlySettings) {
+                    state.monthlySettings = parsed.monthlySettings;
+                } else {
+                    state.monthlySettings = {
+                        'default': {
+                            targetMin: parsed.targetMin || 35000,
+                            targetMax: parsed.targetMax || 40000,
+                            deliveryDays: parsed.deliveryDays || [1, 4]
+                        }
+                    };
+                }
+            } else {
+                state.monthlySettings = {
+                    'default': { targetMin: 35000, targetMax: 40000, deliveryDays: [1, 4] }
+                };
+            }
+            
+            setDatesToToday();
+            updateUI();
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    checkAndAutoUpdateDate();
+                }
+            });
+            window.addEventListener('focus', checkAndAutoUpdateDate);
+        }
+
+        function setDatesToToday() {
+            const today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(today - offset)).toISOString();
+            
+            lastCheckedDate = localISOTime.split('T')[0];
+            lastCheckedMonth = localISOTime.substring(0, 7);
+            
+            document.getElementById('inputDate').value = lastCheckedDate;
+            document.getElementById('monthSelector').value = lastCheckedMonth;
+        }
+
+        function returnToCurrentMonth() {
+            setDatesToToday();
+            updateUI();
+        }
+
+        function checkAndAutoUpdateDate() {
+            const today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(today - offset)).toISOString();
+            const currentRealDate = localISOTime.split('T')[0];
+            const currentRealMonth = localISOTime.substring(0, 7);
+
+            let shouldUpdateUI = false;
+
+            if (currentRealMonth !== lastCheckedMonth) {
+                lastCheckedMonth = currentRealMonth;
+                document.getElementById('monthSelector').value = currentRealMonth;
+                shouldUpdateUI = true;
+            }
+
+            if (currentRealDate !== lastCheckedDate) {
+                lastCheckedDate = currentRealDate;
+                document.getElementById('inputDate').value = currentRealDate;
+            }
+
+            if (shouldUpdateUI) {
+                updateUI();
+            }
+        }
+
+        function getActiveSettings(monthStr) {
+            return state.monthlySettings[monthStr] || state.monthlySettings['default'];
+        }
+
+        function changeMonth() {
+            updateUI();
+        }
+
+        function addRecord(e) {
+            e.preventDefault();
+            const date = document.getElementById('inputDate').value;
+            const b8 = parseInt(document.getElementById('input8').value) || 0;
+            const b45 = parseInt(document.getElementById('input45').value) || 0;
+
+            if (b8 === 0 && b45 === 0) {
+                alert('束数を入力してください');
+                return;
+            }
+
+            const total = (b8 * 480) + (b45 * 360);
+
+            state.records.push({
+                id: Date.now().toString(),
+                date: date,
+                b8: b8,
+                b45: b45,
+                total: total
+            });
+
+            document.getElementById('input8').value = 0;
+            document.getElementById('input45').value = 0;
+
+            document.getElementById('monthSelector').value = date.substring(0, 7);
+
+            saveData();
+            updateUI();
+        }
+
+        function deleteRecord(id) {
+            if (confirm('この記録を削除しますか？')) {
+                state.records = state.records.filter(r => r.id !== id);
+                saveData();
+                updateUI();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('hoseData', JSON.stringify(state));
+        }
+
+        function updateUI() {
+            const selectedMonthStr = document.getElementById('monthSelector').value; 
+            const activeSettings = getActiveSettings(selectedMonthStr);
+            
+            const today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const currentRealMonth = (new Date(today - offset)).toISOString().substring(0, 7);
+            const btnCurrentMonth = document.getElementById('btnCurrentMonth');
+            if(selectedMonthStr !== currentRealMonth) {
+                btnCurrentMonth.classList.remove('hidden');
+                btnCurrentMonth.classList.add('block');
+            } else {
+                btnCurrentMonth.classList.add('hidden');
+                btnCurrentMonth.classList.remove('block');
+            }
+
+            const [y, m] = selectedMonthStr.split('-');
+            document.getElementById('titleMonthProgress').innerText = `${y}年${parseInt(m)}月`;
+            document.getElementById('titleMonthHistory').innerText = `${y}年${parseInt(m)}月`;
+
+            let monthTotal = 0;
+            let sumB8 = 0;
+            let sumB45 = 0;
+
+            state.records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const tbody = document.getElementById('historyTable');
+            tbody.innerHTML = '';
+            
+            let hasRecordsInMonth = false;
+
+            state.records.forEach(r => {
+                if (r.date.startsWith(selectedMonthStr)) {
+                    hasRecordsInMonth = true;
+                    monthTotal += r.total;
+                    sumB8 += r.b8;
+                    sumB45 += r.b45;
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-200 hover:bg-gray-50';
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-left whitespace-nowrap">${r.date}</td>
+                        <td class="py-3 px-4 text-center">${r.b8}</td>
+                        <td class="py-3 px-4 text-center">${r.b45}</td>
+                        <td class="py-3 px-4 text-right">¥${r.total.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="deleteRecord('${r.id}')" class="text-red-500 hover:text-red-700">🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            if (!hasRecordsInMonth) {
+                document.getElementById('noDataMsg').classList.remove('hidden');
+            } else {
+                document.getElementById('noDataMsg').classList.add('hidden');
+            }
+
+            document.getElementById('displayTotal').innerText = monthTotal.toLocaleString();
+            document.getElementById('displayTargetMin').innerText = activeSettings.targetMin.toLocaleString();
+            document.getElementById('displayTargetMax').innerText = activeSettings.targetMax.toLocaleString();
+
+            const remaining = Math.max(0, activeSettings.targetMin - monthTotal);
+            const progress = Math.min(100, (monthTotal / activeSettings.targetMin) * 100);
+            
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            const remainingText = document.getElementById('remainingText');
+            if (remaining === 0) {
+                remainingText.innerText = '🎉 目標達成しました！';
+                remainingText.className = 'text-sm font-bold text-green-600 mt-2';
+            } else {
+                remainingText.innerText = `目標まであと: ¥${remaining.toLocaleString()}`;
+                remainingText.className = 'text-sm font-medium text-red-500 mt-2';
+            }
+
+            updatePredictions(remaining, sumB8, sumB45, selectedMonthStr, activeSettings);
+        }
+
+        function updatePredictions(remaining, sumB8, sumB45, selectedMonthStr, activeSettings) {
+            const paceNormal = document.getElementById('paceNormal');
+            const takeHomeSuggest = document.getElementById('takeHomeSuggest');
+            const takeHomeSuggestNo8 = document.getElementById('takeHomeSuggestNo8');
+            const totalRemainingOnly45 = document.getElementById('totalRemainingOnly45');
+
+            if (remaining === 0) {
+                paceNormal.innerText = "目標達成済みのため、納品は不要です。";
+                takeHomeSuggest.innerHTML = "<span class='font-bold text-green-600'>🎉 今月の目標は達成済みです！</span>";
+                takeHomeSuggestNo8.innerHTML = "<span class='text-gray-500'>-</span>";
+                totalRemainingOnly45.innerHTML = "<span class='font-bold text-green-600'>🎉 達成済みです！</span>";
+                return;
+            }
+
+            const [year, month] = selectedMonthStr.split('-').map(Number);
+            const lastDay = new Date(year, month, 0).getDate();
+            
+            let totalDeliveryDays = 0;
+            for(let d = 1; d <= lastDay; d++) {
+                const tempDate = new Date(year, month - 1, d);
+                if (activeSettings.deliveryDays.includes(tempDate.getDay())) {
+                    totalDeliveryDays++;
+                }
+            }
+
+            const recordedDates = new Set();
+            state.records.forEach(r => {
+                if (r.date.startsWith(selectedMonthStr)) {
+                    recordedDates.add(r.date);
+                }
+            });
+            const completedDays = recordedDates.size;
+
+            const today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(today - offset)).toISOString();
+            const currentMonthStr = localISOTime.substring(0, 7);
+
+            let deliveryDaysLeft = 0;
+            if (selectedMonthStr < currentMonthStr) {
+                deliveryDaysLeft = 0; 
+            } else {
+                deliveryDaysLeft = totalDeliveryDays - completedDays;
+                if (deliveryDaysLeft < 0) deliveryDaysLeft = 0;
+            }
+
+            // --- BUG FIX ---
+            // 少ないデータ数で片方が0%になるのを防ぐため、ベースの比率（8円:4.5円 = 1:2）に重みをつけて加算するスムージング処理
+            const baseWeight8 = 2; 
+            const baseWeight45 = 4;
+            const smoothed8 = sumB8 + baseWeight8;
+            const smoothed45 = sumB45 + baseWeight45;
+            const totalSmoothed = smoothed8 + smoothed45;
+
+            let ratio8 = smoothed8 / totalSmoothed;
+            let ratio45 = smoothed45 / totalSmoothed;
+
+            const avgBundlePrice = (ratio8 * 480) + (ratio45 * 360);
+            const totalBundlesNeeded = Math.ceil(remaining / avgBundlePrice);
+            
+            // Only 4.5 Calculation Logic
+            const totalBundlesNeededOnly45 = Math.ceil(remaining / 360);
+            const totalPcsOnly45 = totalBundlesNeededOnly45 * 80;
+            
+            // Update the NEW total block
+            totalRemainingOnly45.innerHTML = `
+                <div class="mb-1 text-gray-500 text-sm">目標達成まで、あと合計で：</div>
+                <div><b>4.5円ホース： <span class="text-2xl text-red-600">${totalBundlesNeededOnly45.toLocaleString()}</span> 束</b> <span class="text-sm text-red-800">（約 ${totalPcsOnly45.toLocaleString()} 本）</span></div>
+            `;
+
+            if (selectedMonthStr < currentMonthStr) {
+                paceNormal.innerHTML = `この月の納品は終了しています。<br>（未達成金額: ¥${remaining.toLocaleString()}）`;
+                takeHomeSuggest.innerHTML = `<span class='text-gray-600'>過去の月のため、提案はありません。</span>`;
+                takeHomeSuggestNo8.innerHTML = `<span class='text-gray-600'>-</span>`;
+            } else if (deliveryDaysLeft > 0) {
+                const deliveriesPerWeek = activeSettings.deliveryDays.length;
+                
+                // Normal Suggestion (1 delivery)
+                const bundlesPerDelivery = totalBundlesNeeded / deliveryDaysLeft;
+                const est8Takehome = Math.round(bundlesPerDelivery * ratio8);
+                const est45Takehome = Math.round(bundlesPerDelivery * ratio45);
+                const pcs8 = est8Takehome * 60;
+                const pcs45 = est45Takehome * 80;
+                
+                takeHomeSuggest.innerHTML = `
+                    <div class="mb-1"><b>8円ホース： <span class="text-xl">${est8Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs8.toLocaleString()} 本）</span></div>
+                    <div><b>4.5円ホース： <span class="text-xl">${est45Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs45.toLocaleString()} 本）</span></div>
+                `;
+
+                // No 8-yen Suggestion (1 delivery)
+                const bundlesPerDeliveryOnly45 = totalBundlesNeededOnly45 / deliveryDaysLeft;
+                const est45TakehomeOnly45 = Math.ceil(bundlesPerDeliveryOnly45); // Round up to be safe
+                const pcs45Only45 = est45TakehomeOnly45 * 80;
+                
+                takeHomeSuggestNo8.innerHTML = `
+                    <div class="mb-1"><span class="text-gray-500">8円ホース： 0 束</span></div>
+                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeOnly45}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45Only45.toLocaleString()} 本）</span></div>
+                `;
+                
+                // Normal pace (Weekly)
+                const bundlesPerWeek = bundlesPerDelivery * deliveriesPerWeek;
+                const est8Week = Math.round(bundlesPerWeek * ratio8);
+                const est45Week = Math.round(bundlesPerWeek * ratio45);
+                paceNormal.innerHTML = `対象月の納品日は残り <b>${deliveryDaysLeft}回</b> です。<br>1週間あたりおよそ <b>8円:${est8Week}束 / 4.5円:${est45Week}束</b> 持っていくと目標に届きます。`;
+                
+            } else {
+                // If out of delivery days but still have remaining target
+                const est8Takehome = Math.round(totalBundlesNeeded * ratio8);
+                const est45Takehome = Math.round(totalBundlesNeeded * ratio45);
+                const pcs8 = est8Takehome * 60;
+                const pcs45 = est45Takehome * 80;
+
+                takeHomeSuggest.innerHTML = `
+                    <p class="text-sm text-red-600 font-bold mb-2">※予定納品日は終了していますが、目標未達成のため追加で必要な量です。</p>
+                    <div class="mb-1"><b>8円ホース： <span class="text-xl">${est8Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs8.toLocaleString()} 本）</span></div>
+                    <div><b>4.5円ホース： <span class="text-xl">${est45Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs45.toLocaleString()} 本）</span></div>
+                `;
+                
+                const est45TakehomeOnly45 = totalBundlesNeededOnly45;
+                const pcs45Only45 = est45TakehomeOnly45 * 80;
+                takeHomeSuggestNo8.innerHTML = `
+                    <div class="mb-1"><span class="text-gray-500">8円ホース： 0 束</span></div>
+                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeOnly45}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45Only45.toLocaleString()} 本）</span></div>
+                `;
+
+                paceNormal.innerHTML = `対象月の予定納品日はすべて完了しました。<br>（不足分として追加で必要です）`;
+            }
+        }
+
+        function openSettings() {
+            const selectedMonthStr = document.getElementById('monthSelector').value;
+            const [y, m] = selectedMonthStr.split('-');
+            document.getElementById('settingsModalTitle').innerText = `${y}年${parseInt(m)}`;
+
+            const activeSettings = getActiveSettings(selectedMonthStr);
+
+            document.getElementById('settingTargetMin').value = activeSettings.targetMin;
+            document.getElementById('settingTargetMax').value = activeSettings.targetMax;
+            
+            const checkboxes = document.querySelectorAll('input[name="deliveryDay"]');
+            checkboxes.forEach(cb => {
+                cb.checked = activeSettings.deliveryDays.includes(parseInt(cb.value));
+            });
+            
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            const selectedMonthStr = document.getElementById('monthSelector').value;
+            
+            const tMin = parseInt(document.getElementById('settingTargetMin').value) || 35000;
+            const tMax = parseInt(document.getElementById('settingTargetMax').value) || 40000;
+            
+            const selectedDays = Array.from(document.querySelectorAll('input[name="deliveryDay"]:checked'))
+                                      .map(cb => parseInt(cb.value));
+            if (selectedDays.length === 0) {
+                alert('納品する曜日を1つ以上選択してください。');
+                return;
+            }
+            
+            state.monthlySettings[selectedMonthStr] = {
+                targetMin: tMin,
+                targetMax: tMax,
+                deliveryDays: selectedDays
+            };
+
+            state.monthlySettings['default'] = state.monthlySettings[selectedMonthStr];
+            
+            saveData();
+            updateUI();
+            closeSettings();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
