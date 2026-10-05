@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホース納品・売上管理</title>
+    <!-- Tailwind CSS v4 CDNを読み込み -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* スクロールバーのスタイル調整 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-4 md:p-8">
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 sm:p-8 text-center relative">
+            <h1 class="text-2xl sm:text-3xl font-bold mb-2">ホース納品・売上管理</h1>
+            <div class="flex items-center justify-center gap-2">
+                <p class="text-blue-100 text-sm sm:text-base" id="headerTargetText">月・木納品ペース / 月間目標: 35,000円〜40,000円</p>
+                <button onclick="openSettingsModal()" class="text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 p-1 rounded-full transition-colors" title="目標金額の設定">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+            <div class="absolute top-4 right-4 bg-white/20 px-3 py-1 rounded-full text-sm">
+                <span id="currentMonthDisplay">--月</span>度
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 md:p-8 flex flex-col lg:flex-row gap-6 md:gap-8">
+            
+            <!-- 左側パネル：入力とサマリー -->
+            <div class="w-full lg:w-5/12 flex flex-col gap-6">
+                
+                <!-- 納品記録入力フォーム -->
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h2 class="text-lg font-bold border-b-2 border-indigo-200 pb-2 mb-4 text-gray-800 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                        </svg>
+                        納品記録の追加
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">納品日</label>
+                            <input type="date" id="deliveryDate" class="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow">
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1 flex items-center justify-between">
+                                    <span>8円ホース<span class="text-xs text-gray-500 font-normal ml-1">(1束=60本)</span></span>
+                                    <span class="text-xs font-normal text-gray-500">束</span>
+                                </label>
+                                <input type="number" id="hose8yen" min="0" value="0" placeholder="0" class="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-right text-lg">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1 flex items-center justify-between">
+                                    <span>4.5円ホース<span class="text-xs text-gray-500 font-normal ml-1">(1束=80本)</span></span>
+                                    <span class="text-xs font-normal text-gray-500">束</span>
+                                </label>
+                                <input type="number" id="hose4_5yen" min="0" value="0" placeholder="0" class="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-right text-lg">
+                            </div>
+                        </div>
+
+                        <button onclick="addRecord()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md shadow-md hover:shadow-lg transition duration-200 flex justify-center items-center gap-2 mt-2">
+                            <span>記録を保存する</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 現在の状況サマリー -->
+                <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-100 shadow-sm relative overflow-hidden">
+                    <!-- 背景の装飾 -->
+                    <div class="absolute -right-6 -top-6 text-indigo-100 opacity-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+
+                    <h2 class="text-lg font-bold text-indigo-900 mb-4 relative z-10">今月の状況</h2>
+                    <div class="space-y-3 relative z-10">
+                        <div class="flex justify-between items-end border-b border-indigo-200 pb-3">
+                            <span class="text-indigo-800 font-medium">合計売上</span>
+                            <div class="text-right">
+                                <span class="text-3xl font-black text-indigo-900"><span id="totalSales">0</span></span>
+                                <span class="text-base font-bold text-indigo-700 ml-1">円</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-gray-600 text-sm">8円ホース納品数</span>
+                            <div class="text-right">
+                                <span class="font-semibold text-gray-800"><span id="total8yenBundles">0</span> <span class="text-sm font-normal text-gray-500">束</span></span>
+                                <span class="text-xs text-gray-500 ml-1">(<span id="total8yenItems">0</span>本)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 text-sm">4.5円ホース納品数</span>
+                            <div class="text-right">
+                                <span class="font-semibold text-gray-800"><span id="total4_5yenBundles">0</span> <span class="text-sm font-normal text-gray-500">束</span></span>
+                                <span class="text-xs text-gray-500 ml-1">(<span id="total4_5yenItems">0</span>本)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 進捗プログレスバー -->
+                    <div class="mt-6 pt-4 border-t border-indigo-100 relative z-10">
+                        <div class="flex justify-between text-xs mb-1.5 font-medium">
+                            <span class="text-indigo-600" id="progressBarTargetText">目標: 40,000円</span>
+                            <span class="text-indigo-700 font-bold bg-indigo-100 px-2 py-0.5 rounded" id="progressText">0%</span>
+                        </div>
+                        <!-- バーの背景 -->
+                        <div class="w-full bg-indigo-200 rounded-full h-3 overflow-hidden shadow-inner">
+                            <!-- 最小目標のライン -->
+                            <div class="relative w-full h-full">
+                                <!-- 実際の進捗バー -->
+                                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full rounded-full transition-all duration-500 ease-out" id="progressBar" style="width: 0%"></div>
+                                <!-- 最小目標の目印 -->
+                                <div id="minTargetLine" class="absolute top-0 bottom-0 border-r-2 border-white opacity-75 z-20" style="left: 87.5%; width: 1px;" title="最小目標ライン"></div>
+                            </div>
+                        </div>
+                        <div id="remainingMessageContainer" class="mt-3 bg-white/60 rounded-md py-2 px-3 border border-gray-100 flex flex-col gap-2">
+                            <!-- JSで中身が生成されます -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="clearDataConfirm()" class="text-gray-400 hover:text-rose-500 text-xs py-2 underline transition duration-200">
+                        今月のデータをすべてリセット
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右側パネル：納品履歴 -->
+            <div class="w-full lg:w-7/12 flex flex-col h-full">
+                <div class="flex justify-between items-end border-b-2 border-gray-200 pb-2 mb-4">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        納品履歴
+                    </h2>
+                    <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">最新順</span>
+                </div>
+                
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm flex-1 overflow-hidden flex flex-col">
+                    <div class="overflow-x-auto overflow-y-auto max-h-[500px]">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
+                                    <th scope="col" class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">8円<span class="text-[10px] block font-normal">(1束=60本)</span></th>
+                                    <th scope="col" class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">4.5円<span class="text-[10px] block font-normal">(1束=80本)</span></th>
+                                    <th scope="col" class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">売上</th>
+                                    <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">削除</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- JavaScriptでレコードが挿入されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- データが空の場合の表示 -->
+                    <div id="emptyState" class="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <p class="text-lg font-medium text-gray-500">まだ記録がありません</p>
+                        <p class="text-sm mt-1">左のフォームから納品本数を入力してください。</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- カスタムメッセージモーダル (alertの代替) -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+            <h3 id="modalTitle" class="text-lg font-bold text-gray-900 mb-2">メッセージ</h3>
+            <p id="modalMessage" class="text-gray-600 mb-6"></p>
+            <div class="flex justify-end gap-3" id="modalButtons">
+                <!-- ボタンはJavaScriptで動的に生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 目標設定モーダル -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                </svg>
+                目標金額の設定
+            </h3>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">第1目標 (最低ライン)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="inputTargetMin" step="1000" min="0" class="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 text-right">
+                        <span class="text-sm text-gray-500">円</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">最大目標 (上限)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="inputTargetMax" step="1000" min="0" class="w-full p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 text-right">
+                        <span class="text-sm text-gray-500">円</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition">キャンセル</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition shadow-sm">保存する</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let records = [];
+        let targetSalesMin = 35000;
+        let targetSalesMax = 40000;
+        let currentConfirmCallback = null;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set today's date as default
+            const today = new Date();
+            // Local timezone string for date input YYYY-MM-DD
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            
+            document.getElementById('deliveryDate').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('currentMonthDisplay').textContent = String(today.getMonth() + 1);
+            
+            // Focus on 8yen input for quick entry
+            document.getElementById('hose8yen').addEventListener('focus', function() {
+                if(this.value === '0') this.value = '';
+            });
+            document.getElementById('hose8yen').addEventListener('blur', function() {
+                if(this.value === '') this.value = '0';
+            });
+            document.getElementById('hose4_5yen').addEventListener('focus', function() {
+                if(this.value === '0') this.value = '';
+            });
+            document.getElementById('hose4_5yen').addEventListener('blur', function() {
+                if(this.value === '') this.value = '0';
+            });
+            
+            loadSettings();
+            loadData();
+            updateUI();
+        });
+
+        // --- Settings Functions ---
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('hoseSettings');
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    if (settings.min) targetSalesMin = parseInt(settings.min, 10);
+                    if (settings.max) targetSalesMax = parseInt(settings.max, 10);
+                } catch(e) {
+                    console.error("設定の読み込みに失敗しました", e);
+                }
+            }
+            // 異常値対策
+            if (targetSalesMin > targetSalesMax) {
+                let temp = targetSalesMin;
+                targetSalesMin = targetSalesMax;
+                targetSalesMax = temp;
+            }
+        }
+
+        function openSettingsModal() {
+            document.getElementById('inputTargetMin').value = targetSalesMin;
+            document.getElementById('inputTargetMax').value = targetSalesMax;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const newMin = parseInt(document.getElementById('inputTargetMin').value, 10);
+            const newMax = parseInt(document.getElementById('inputTargetMax').value, 10);
+
+            if (isNaN(newMin) || isNaN(newMax) || newMin < 0 || newMax < 0) {
+                showModal("エラー", "正しい金額を入力してください。", false);
+                return;
+            }
+
+            targetSalesMin = newMin;
+            targetSalesMax = newMax;
+            
+            // 大小関係が逆転していたら入れ替える
+            if (targetSalesMin > targetSalesMax) {
+                let temp = targetSalesMin;
+                targetSalesMin = targetSalesMax;
+                targetSalesMax = temp;
+            }
+
+            localStorage.setItem('hoseSettings', JSON.stringify({
+                min: targetSalesMin,
+                max: targetSalesMax
+            }));
+
+            closeSettingsModal();
+            updateUI();
+            showToast("目標金額を更新しました");
+        }
+
+        // --- Core Functions ---
+        function addRecord() {
+            const dateInput = document.getElementById('deliveryDate').value;
+            const bundles8yenInput = document.getElementById('hose8yen').value;
+            const bundles4_5yenInput = document.getElementById('hose4_5yen').value;
+            
+            const bundles8yen = parseInt(bundles8yenInput, 10) || 0;
+            const bundles4_5yen = parseInt(bundles4_5yenInput, 10) || 0;
+
+            if (!dateInput) {
+                showModal("エラー", "納品日を選択してください。", false);
+                return;
+            }
+
+            if (bundles8yen === 0 && bundles4_5yen === 0) {
+                showModal("エラー", "束数が入力されていません。\n1束以上入力してください。", false);
+                return;
+            }
+
+            if (bundles8yen < 0 || bundles4_5yen < 0) {
+                showModal("エラー", "束数にマイナスの値は入力できません。", false);
+                return;
+            }
+
+            // 1束の本数を掛けて売上を計算
+            const items8yen = bundles8yen * 60;
+            const items4_5yen = bundles4_5yen * 80;
+            const sales = (items8yen * 8) + (items4_5yen * 4.5);
+            
+            const newRecord = {
+                id: 'rec_' + Date.now().toString(),
+                date: dateInput,
+                bundles8: bundles8yen,
+                bundles4_5: bundles4_5yen,
+                sales: sales
+            };
+
+            records.push(newRecord);
+            
+            // 日付の新しい順（降順）にソート
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // 入力欄をリセット
+            document.getElementById('hose8yen').value = '0';
+            document.getElementById('hose4_5yen').value = '0';
+
+            saveData();
+            updateUI();
+            
+            // 成功メッセージ（スナックバー風）
+            showToast("記録を保存しました");
+        }
+
+        function deleteRecordConfirm(id) {
+            currentConfirmCallback = () => {
+                records = records.filter(record => record.id !== id);
+                saveData();
+                updateUI();
+                showToast("記録を削除しました");
+            };
+            showModal("確認", "この記録を削除してよろしいですか？", true);
+        }
+
+        function updateUI() {
+            const tableBody = document.getElementById('recordTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            let totalSales = 0;
+            let total8Bundles = 0;
+            let total4_5Bundles = 0;
+
+            tableBody.innerHTML = '';
+
+            // --- テーブルの更新 ---
+            if (records.length === 0) {
+                emptyState.style.display = 'flex';
+                tableBody.parentElement.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                tableBody.parentElement.style.display = 'table';
+
+                records.forEach(record => {
+                    totalSales += record.sales;
+                    total8Bundles += record.bundles8 || 0;
+                    total4_5Bundles += record.bundles4_5 || 0;
+
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-indigo-50 transition-colors duration-150';
+                    
+                    // 日付フォーマット (例: 10/05 (月))
+                    const dateObj = new Date(record.date);
+                    const days = ['日', '月', '火', '水', '木', '金', '土'];
+                    const dayOfWeek = days[dateObj.getDay()];
+                    // 月・木の場合は色を変える
+                    let dayStyle = "text-gray-500";
+                    if(dateObj.getDay() === 1 || dateObj.getDay() === 4) {
+                        dayStyle = "text-indigo-600 font-bold"; // 納品日強調
+                    }
+                    const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()} <span class="${dayStyle}">(${dayOfWeek})</span>`;
+
+                    row.innerHTML = `
+                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-900">${formattedDate}</td>
+                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-700 text-right font-medium">${record.bundles8 > 0 ? record.bundles8 + ' 束' : '-'}</td>
+                        <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-700 text-right font-medium">${record.bundles4_5 > 0 ? record.bundles4_5 + ' 束' : '-'}</td>
+                        <td class="py-3 px-4 whitespace-nowrap text-sm text-indigo-700 font-bold text-right">${record.sales.toLocaleString()} <span class="text-xs font-normal">円</span></td>
+                        <td class="py-3 px-4 whitespace-nowrap text-center text-sm font-medium">
+                            <button onclick="deleteRecordConfirm('${record.id}')" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="削除">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // サマリーの更新
+            document.getElementById('totalSales').textContent = totalSales.toLocaleString();
+            document.getElementById('total8yenBundles').textContent = total8Bundles;
+            document.getElementById('total8yenItems').textContent = (total8Bundles * 60).toLocaleString();
+            document.getElementById('total4_5yenBundles').textContent = total4_5Bundles;
+            document.getElementById('total4_5yenItems').textContent = (total4_5Bundles * 80).toLocaleString();
+
+            // ヘッダーテキストの更新
+            document.getElementById('headerTargetText').textContent = `月・木納品ペース / 月間目標: ${targetSalesMin.toLocaleString()}円〜${targetSalesMax.toLocaleString()}円`;
+            document.getElementById('progressBarTargetText').textContent = `目標: ${targetSalesMax.toLocaleString()}円`;
+
+            // プログレスバーの更新
+            // 最大目標が0の場合はエラーを防ぐために1とする
+            const safeTargetMax = targetSalesMax > 0 ? targetSalesMax : 1;
+            const progressPercent = Math.min((totalSales / safeTargetMax) * 100, 100);
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+            document.getElementById('progressText').textContent = Math.floor(progressPercent) + '%';
+            
+            const minTargetLinePercent = Math.min((targetSalesMin / safeTargetMax) * 100, 100);
+            document.getElementById('minTargetLine').style.left = minTargetLinePercent + '%';
+
+            // --- 残り金額と予測の更新 ---
+            const remainingMessageContainer = document.getElementById('remainingMessageContainer');
+            const remainingToMin = targetSalesMin - totalSales;
+            
+            // 1束あたりの金額
+            const pricePerBundle8 = 60 * 8;   // 480円
+            const pricePerBundle4_5 = 80 * 4.5; // 360円
+
+            if (remainingToMin > 0) {
+                // 予測ロジック
+                let est8 = 0;
+                let est4_5 = 0;
+                let estimateTitle = "現在のペースでの予測";
+
+                if (totalSales > 0) {
+                    // 実績に基づく割合計算
+                    const ratioSales8 = (total8Bundles * pricePerBundle8) / totalSales;
+                    const ratioSales4_5 = (total4_5Bundles * pricePerBundle4_5) / totalSales;
+                    
+                    est8 = Math.ceil((remainingToMin * ratioSales8) / pricePerBundle8);
+                    est4_5 = Math.ceil((remainingToMin * ratioSales4_5) / pricePerBundle4_5);
+                } else {
+                    // データがない場合は、ご要望の「4.5円の方が多い」を反映した仮の比率(おおよそ3:7の束数比)で計算
+                    estimateTitle = "おすすめの納品目安 (4.5円多め)";
+                    est8 = Math.ceil((remainingToMin * 0.35) / pricePerBundle8);
+                    est4_5 = Math.ceil((remainingToMin * 0.65) / pricePerBundle4_5);
+                }
+
+                // 入力されている日付を基準にして当月の残り週数を計算
+                const selectedDateStr = document.getElementById('deliveryDate').value;
+                const baseDate = selectedDateStr ? new Date(selectedDateStr) : new Date();
+                const lastDayOfMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
+                const currentDay = baseDate.getDate();
+                
+                let remainingDays = lastDayOfMonth - currentDay + 1; // 基準日を含む残り日数
+                if (remainingDays < 1) remainingDays = 1;
+                let remainingWeeks = Math.ceil(remainingDays / 7);
+                if (remainingWeeks < 1) remainingWeeks = 1;
+
+                // 1週間あたりの目安
+                const weeklyEst8 = Math.ceil(est8 / remainingWeeks);
+                const weeklyEst4_5 = Math.ceil(est4_5 / remainingWeeks);
+                
+                const shortTargetMinStr = targetSalesMin >= 10000 ? (targetSalesMin / 10000) + '万' : targetSalesMin;
+
+                remainingMessageContainer.className = "mt-3 bg-white/80 rounded-md py-3 px-4 border border-indigo-100 shadow-sm flex flex-col gap-3";
+                remainingMessageContainer.innerHTML = `
+                    <div class="text-center border-b border-indigo-50 pb-2">
+                        <p class="text-sm text-gray-700 font-medium">第1目標(${shortTargetMinStr}円)まであと: <span class="font-bold text-rose-500 text-xl">${Math.floor(remainingToMin).toLocaleString()}</span>円</p>
+                    </div>
+                    <div class="bg-indigo-50/50 p-3 rounded-md text-sm border border-indigo-100/50 shadow-sm">
+                        <p class="text-sm font-bold text-indigo-800 mb-2 flex items-center gap-1 justify-center border-b border-indigo-100 pb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                            </svg>
+                            1週間の目標ペース (残り約${remainingWeeks}週)
+                        </p>
+                        <div class="flex justify-around items-center text-gray-800 mt-3 font-medium">
+                            <div class="text-center">
+                                <span class="block text-xs text-gray-500 mb-0.5">8円ホース</span>
+                                <span class="text-2xl font-black text-indigo-700">${weeklyEst8}</span> <span class="text-sm">束 / 週</span>
+                            </div>
+                            <div class="text-gray-300 w-px h-10 bg-gray-300"></div>
+                            <div class="text-center">
+                                <span class="block text-xs text-gray-500 mb-0.5">4.5円ホース</span>
+                                <span class="text-2xl font-black text-indigo-700">${weeklyEst4_5}</span> <span class="text-sm">束 / 週</span>
+                            </div>
+                        </div>
+                        <p class="text-center text-xs text-gray-500 mt-4 pt-2 border-t border-indigo-50">
+                            ※ 月の全体残り: 8円 <b>${est8}</b>束 / 4.5円 <b>${est4_5}</b>束
+                        </p>
+                    </div>
+                `;
+            } else if (totalSales < targetSalesMax) {
+                const remainingToMax = targetSalesMax - totalSales;
+                
+                // 4万までの追加目安はシンプルに単独で表示
+                const extraEst4_5 = Math.ceil(remainingToMax / pricePerBundle4_5);
+                const shortTargetMinStr = targetSalesMin >= 10000 ? (targetSalesMin / 10000) + '万' : targetSalesMin;
+                const shortTargetMaxStr = targetSalesMax >= 10000 ? (targetSalesMax / 10000) + '万' : targetSalesMax;
+
+                remainingMessageContainer.className = "mt-3 text-center bg-emerald-50 rounded-md py-3 px-3 border border-emerald-100 flex flex-col gap-2";
+                remainingMessageContainer.innerHTML = `
+                    <p class="text-sm text-emerald-800 font-medium">✨ 第1目標(${shortTargetMinStr}円)達成！上限(${shortTargetMaxStr}円)まであと <span class="font-bold text-emerald-600 text-xl">${Math.floor(remainingToMax).toLocaleString()}</span>円</p>
+                    <p class="text-xs text-emerald-700 bg-emerald-100/50 py-1 rounded inline-block mx-auto px-3">
+                        (4.5円ホースなら あと約 <b>${extraEst4_5}</b> 束)
+                    </p>
+                `;
+            } else {
+                const shortTargetMaxStr = targetSalesMax >= 10000 ? (targetSalesMax / 10000) + '万' : targetSalesMax;
+                remainingMessageContainer.className = "mt-3 text-center bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-md py-3 px-3 border border-yellow-200 shadow-sm";
+                remainingMessageContainer.innerHTML = `<p class="text-sm text-yellow-800 font-bold text-lg">🎉 素晴らしい！今月の最大目標(${shortTargetMaxStr}円)を達成しました！</p>`;
+            }
+        }
+
+        // --- Data Persistence ---
+        function saveData() {
+            localStorage.setItem('hoseRecords_v2', JSON.stringify(records));
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('hoseRecords_v2');
+            if (savedData) {
+                try {
+                    records = JSON.parse(savedData);
+                } catch(e) {
+                    console.error("データの読み込みに失敗しました", e);
+                    records = [];
+                }
+            }
+        }
+
+        function clearDataConfirm() {
+            if(records.length === 0) return;
+            
+            currentConfirmCallback = () => {
+                records = [];
+                saveData();
+                updateUI();
+                showToast("すべてのデータをリセットしました");
+            };
+            showModal("データのリセット", "本当にすべての納品記録を削除しますか？\nこの操作は取り消せません。", true);
+        }
+
+        // --- Custom Modal System (Alert/Confirm replacement) ---
+        function showModal(title, message, isConfirm) {
+            const modal = document.getElementById('messageModal');
+            const titleEl = document.getElementById('modalTitle');
+            const messageEl = document.getElementById('modalMessage');
+            const buttonsEl = document.getElementById('modalButtons');
+            
+            titleEl.textContent = title;
+            // 改行をbrタグに変換
+            messageEl.innerHTML = message.replace(/\n/g, '<br>');
+            
+            buttonsEl.innerHTML = '';
+            
+            if (isConfirm) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'キャンセル';
+                cancelBtn.className = 'px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition';
+                cancelBtn.onclick = closeModal;
+                
+                const confirmBtn = document.createElement('button');
+                confirmBtn.textContent = 'はい';
+                confirmBtn.className = 'px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition shadow-sm';
+                confirmBtn.onclick = () => {
+                    if (currentConfirmCallback) currentConfirmCallback();
+                    closeModal();
+                };
+                
+                buttonsEl.appendChild(cancelBtn);
+                buttonsEl.appendChild(confirmBtn);
+            } else {
+                const okBtn = document.createElement('button');
+                okBtn.textContent = 'OK';
+                okBtn.className = 'px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition shadow-sm';
+                okBtn.onclick = closeModal;
+                buttonsEl.appendChild(okBtn);
+            }
+            
+            modal.classList.remove('hidden');
+        }
+        
+        function closeModal() {
+            document.getElementById('messageModal').classList.add('hidden');
+            currentConfirmCallback = null;
+        }
+
+        // --- Simple Toast Notification ---
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg z-50 text-sm font-medium transition-opacity duration-300 opacity-0';
+            document.body.appendChild(toast);
+            
+            // フェードイン
+            setTimeout(() => toast.classList.remove('opacity-0'), 10);
+            
+            // 2.5秒後にフェードアウトして削除
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
