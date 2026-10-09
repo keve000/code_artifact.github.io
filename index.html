@@ -54,7 +54,7 @@
                     <div id="takeHomeSuggest" class="text-green-900 leading-relaxed pl-2 border-l-2 border-green-300">データがありません</div>
                 </div>
                 <div>
-                    <h4 class="text-xs font-semibold text-yellow-700 bg-yellow-100 inline-block px-2 py-1 rounded mb-2">【代案】8円がもらえなかった場合</h4>
+                    <h4 class="text-xs font-semibold text-yellow-700 bg-yellow-100 inline-block px-2 py-1 rounded mb-2">【代案】8円と6.5円がもらえなかった場合</h4>
                     <div id="takeHomeSuggestNo8" class="text-yellow-900 leading-relaxed pl-2 border-l-2 border-yellow-300">データがありません</div>
                 </div>
             </div>
@@ -375,13 +375,6 @@
                 <div><b>4.5円ホース： <span class="text-2xl text-red-600">${totalBundlesNeededOnly45.toLocaleString()}</span> 束</b> <span class="text-sm text-red-800">（約 ${totalPcsOnly45.toLocaleString()} 本）</span></div>
             `;
 
-            // No 8 logic
-            const smoothedNo8Total = smoothed65 + smoothed45;
-            let ratio65_no8 = smoothed65 / smoothedNo8Total;
-            let ratio45_no8 = smoothed45 / smoothedNo8Total;
-            const avgBundlePriceNo8 = (ratio65_no8 * 845) + (ratio45_no8 * 360);
-            const totalBundlesNeededNo8 = Math.ceil(remaining / avgBundlePriceNo8);
-
             if (selectedMonthStr < currentMonthStr) {
                 paceNormal.innerHTML = `この月の納品は終了しています。<br>（未達成金額: ¥${remaining.toLocaleString()}）`;
                 takeHomeSuggest.innerHTML = `<span class='text-gray-600'>過去の月のため、提案はありません。</span>`;
@@ -402,16 +395,15 @@
                     <div><b>4.5円ホース： <span class="text-xl">${est45Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs45.toLocaleString()} 本）</span></div>
                 `;
 
-                const bundlesPerDeliveryNo8 = totalBundlesNeededNo8 / deliveryDaysLeft;
-                const est65TakehomeNo8 = Math.round(bundlesPerDeliveryNo8 * ratio65_no8);
-                const est45TakehomeNo8 = Math.round(bundlesPerDeliveryNo8 * ratio45_no8);
-                const pcs65No8 = est65TakehomeNo8 * 130;
-                const pcs45No8 = est45TakehomeNo8 * 80;
+                // No 8 and 6.5 Suggestion (Only 4.5)
+                const bundlesPerDeliveryOnly45 = totalBundlesNeededOnly45 / deliveryDaysLeft;
+                const est45TakehomeOnly45 = Math.ceil(bundlesPerDeliveryOnly45);
+                const pcs45Only45 = est45TakehomeOnly45 * 80;
                 
                 takeHomeSuggestNo8.innerHTML = `
                     <div class="mb-1"><span class="text-gray-500">8円ホース： 0 束</span></div>
-                    <div class="mb-1"><b>6.5円ホース： <span class="text-xl text-yellow-700">${est65TakehomeNo8}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs65No8.toLocaleString()} 本）</span></div>
-                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeNo8}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45No8.toLocaleString()} 本）</span></div>
+                    <div class="mb-1"><span class="text-gray-500">6.5円ホース： 0 束</span></div>
+                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeOnly45}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45Only45.toLocaleString()} 本）</span></div>
                 `;
                 
                 const bundlesPerWeek = bundlesPerDelivery * deliveriesPerWeek;
@@ -435,15 +427,13 @@
                     <div><b>4.5円ホース： <span class="text-xl">${est45Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs45.toLocaleString()} 本）</span></div>
                 `;
                 
-                const est65TakehomeNo8 = Math.round(totalBundlesNeededNo8 * ratio65_no8);
-                const est45TakehomeNo8 = Math.round(totalBundlesNeededNo8 * ratio45_no8);
-                const pcs65No8 = est65TakehomeNo8 * 130;
-                const pcs45No8 = est45TakehomeNo8 * 80;
+                const est45TakehomeOnly45 = totalBundlesNeededOnly45;
+                const pcs45Only45 = est45TakehomeOnly45 * 80;
 
                 takeHomeSuggestNo8.innerHTML = `
                     <div class="mb-1"><span class="text-gray-500">8円ホース： 0 束</span></div>
-                    <div class="mb-1"><b>6.5円ホース： <span class="text-xl text-yellow-700">${est65TakehomeNo8}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs65No8.toLocaleString()} 本）</span></div>
-                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeNo8}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45No8.toLocaleString()} 本）</span></div>
+                    <div class="mb-1"><span class="text-gray-500">6.5円ホース： 0 束</span></div>
+                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeOnly45}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45Only45.toLocaleString()} 本）</span></div>
                 `;
 
                 paceNormal.innerHTML = `対象月の予定納品日はすべて完了しました。<br>（不足分として追加で必要です）`;
