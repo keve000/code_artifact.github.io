@@ -84,17 +84,49 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">日付</label>
                     <input type="date" id="inputDate" required class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
+                <p class="text-xs text-gray-500 mb-3">※束と本の両方を入力できます（例：2束と15本）。</p>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">8円の束 (1束60本=480円)</label>
-                    <input type="number" id="input8" min="0" value="0" class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">8円ホース (1束60本=480円)</label>
+                    <div class="flex gap-2">
+                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input8" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
+                            <span class="px-2 text-sm text-gray-500">束</span>
+                        </div>
+                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input8p" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
+                            <span class="px-2 text-sm text-gray-500">本</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">6.5円の束 (1束130本=845円)</label>
-                    <input type="number" id="input65" min="0" value="0" class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">6.5円ホース (1束130本=845円)</label>
+                    <div class="flex gap-2">
+                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input65" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
+                            <span class="px-2 text-sm text-gray-500">束</span>
+                        </div>
+                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input65p" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
+                            <span class="px-2 text-sm text-gray-500">本</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">4.5円の束 (1束80本=360円)</label>
-                    <input type="number" id="input45" min="0" value="0" class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">4.5円ホース (1束80本=360円)</label>
+                    <div class="flex gap-2">
+                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input45" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
+                            <span class="px-2 text-sm text-gray-500">束</span>
+                        </div>
+                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input45p" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
+                            <span class="px-2 text-sm text-gray-500">本</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6 bg-gray-50 border border-gray-200 rounded p-2 text-sm text-gray-700 flex justify-between">
+                    <span>今回の金額</span>
+                    <b>¥<span id="inputPreview">0</span></b>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">記録を追加する</button>
             </form>
@@ -108,9 +140,9 @@
                     <thead>
                         <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
                             <th class="py-3 px-4 text-left">日付</th>
-                            <th class="py-3 px-4 text-center">8円(束)</th>
-                            <th class="py-3 px-4 text-center">6.5円(束)</th>
-                            <th class="py-3 px-4 text-center">4.5円(束)</th>
+                            <th class="py-3 px-4 text-center">8円</th>
+                            <th class="py-3 px-4 text-center">6.5円</th>
+                            <th class="py-3 px-4 text-center">4.5円</th>
                             <th class="py-3 px-4 text-right">金額</th>
                             <th class="py-3 px-4 text-center">操作</th>
                         </tr>
@@ -224,18 +256,46 @@
 
         function changeMonth() { updateUI(); }
 
+        // 束・本の入力値を読み取る
+        function readQtyInputs() {
+            const v = id => Math.max(0, parseInt(document.getElementById(id).value) || 0);
+            return {
+                b8: v('input8'), p8: v('input8p'),
+                b65: v('input65'), p65: v('input65p'),
+                b45: v('input45'), p45: v('input45p')
+            };
+        }
+
+        // 金額計算（束単価 + 1本単価）。6.5円の端数対策で小数第1位に丸める
+        function calcTotal(q) {
+            const total = (q.b8 * 480) + (q.p8 * 8)
+                        + (q.b65 * 845) + (q.p65 * 6.5)
+                        + (q.b45 * 360) + (q.p45 * 4.5);
+            return Math.round(total * 10) / 10;
+        }
+
+        function updateInputPreview() {
+            document.getElementById('inputPreview').innerText = calcTotal(readQtyInputs()).toLocaleString();
+        }
+
+        // 履歴表示用: 「2束+15本」「15本」「2束」「-」
+        function formatQty(b, p) {
+            b = b || 0; p = p || 0;
+            if (b === 0 && p === 0) return '<span class="text-gray-300">-</span>';
+            if (p === 0) return `${b}束`;
+            if (b === 0) return `${p}本`;
+            return `${b}束<span class="text-gray-400">+</span>${p}本`;
+        }
+
         function addRecord(e) {
             e.preventDefault();
             const date = document.getElementById('inputDate').value;
-            const b8 = parseInt(document.getElementById('input8').value) || 0;
-            const b65 = parseInt(document.getElementById('input65').value) || 0;
-            const b45 = parseInt(document.getElementById('input45').value) || 0;
-            if (b8 === 0 && b65 === 0 && b45 === 0) { alert('束数を入力してください'); return; }
-            const total = (b8 * 480) + (b65 * 845) + (b45 * 360);
-            state.records.push({ id: Date.now().toString(), date: date, b8: b8, b65: b65, b45: b45, total: total });
-            document.getElementById('input8').value = 0;
-            document.getElementById('input65').value = 0;
-            document.getElementById('input45').value = 0;
+            const q = readQtyInputs();
+            if (Object.values(q).every(n => n === 0)) { alert('束数または本数を入力してください'); return; }
+            const total = calcTotal(q);
+            state.records.push({ id: Date.now().toString(), date: date, ...q, total: total });
+            ['input8', 'input8p', 'input65', 'input65p', 'input45', 'input45p'].forEach(id => document.getElementById(id).value = 0);
+            updateInputPreview();
             document.getElementById('monthSelector').value = date.substring(0, 7);
             saveData();
             updateUI();
@@ -282,14 +342,17 @@
             state.records.forEach(r => {
                 if (r.date.startsWith(selectedMonthStr)) {
                     hasRecordsInMonth = true;
-                    const rb65 = r.b65 || 0;
-                    monthTotal += r.total; sumB8 += r.b8; sumB65 += rb65; sumB45 += r.b45;
+                    monthTotal += r.total;
+                    // 比率計算用に本数を束換算して加算
+                    sumB8 += (r.b8 || 0) + (r.p8 || 0) / 60;
+                    sumB65 += (r.b65 || 0) + (r.p65 || 0) / 130;
+                    sumB45 += (r.b45 || 0) + (r.p45 || 0) / 80;
                     const tr = document.createElement('tr');
                     tr.className = 'border-b border-gray-200 hover:bg-gray-50';
                     tr.innerHTML = `<td class="py-3 px-4 text-left whitespace-nowrap">${r.date}</td>
-                        <td class="py-3 px-4 text-center">${r.b8}</td>
-                        <td class="py-3 px-4 text-center">${rb65}</td>
-                        <td class="py-3 px-4 text-center">${r.b45}</td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap">${formatQty(r.b8, r.p8)}</td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap">${formatQty(r.b65, r.p65)}</td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap">${formatQty(r.b45, r.p45)}</td>
                         <td class="py-3 px-4 text-right">¥${r.total.toLocaleString()}</td>
                         <td class="py-3 px-4 text-center"><button onclick="deleteRecord('${r.id}')" class="text-red-500 hover:text-red-700">🗑️</button></td>`;
                     tbody.appendChild(tr);
