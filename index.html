@@ -9,21 +9,29 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
         .modal { display: none; }
         .modal.active { display: flex; }
+        /* カレンダー用微調整 */
+        .calendar-cell { min-height: 72px; }
     </style>
 </head>
-<body class="text-gray-800 p-4 md:p-8 max-w-4xl mx-auto">
+<body class="text-gray-800 p-3 md:p-8 max-w-5xl mx-auto">
     <!-- Header -->
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 class="text-2xl font-bold text-gray-900">ホース納品管理</h1>
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center bg-white rounded shadow px-2 py-1">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <span>ホース納品管理</span>
+                <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v2.0</span>
+            </h1>
+            <p class="text-xs text-gray-500 mt-0.5">月ごとの目標・売上カレンダー・自由なホース管理</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div class="flex items-center bg-white rounded shadow-sm border border-gray-200 px-3 py-1.5">
                 <span class="text-gray-500 text-sm mr-2">📅 対象月:</span>
-                <input type="month" id="monthSelector" class="border-none bg-transparent outline-none cursor-pointer font-bold text-lg" onchange="changeMonth()">
+                <input type="month" id="monthSelector" class="border-none bg-transparent outline-none cursor-pointer font-bold text-lg text-gray-800" onchange="changeMonth()">
             </div>
-            <button onclick="returnToCurrentMonth()" class="text-blue-600 hover:text-blue-800 bg-blue-50 border border-blue-200 py-1.5 px-3 rounded shadow-sm text-sm font-bold transition-colors hidden md:block" id="btnCurrentMonth">
+            <button onclick="returnToCurrentMonth()" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 py-1.5 px-3 rounded shadow-sm text-sm font-bold transition-colors hidden md:block" id="btnCurrentMonth">
                 今月へ戻る
             </button>
-            <button onclick="openSettings()" class="text-gray-500 hover:text-gray-700 bg-white py-1.5 px-3 rounded shadow text-sm font-bold flex items-center">
+            <button onclick="openSettings()" class="text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 border border-gray-200 py-1.5 px-3 rounded shadow-sm text-sm font-bold flex items-center gap-1.5 transition-colors">
                 ⚙️ 設定
             </button>
         </div>
@@ -32,187 +40,364 @@
     <!-- Dashboard Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <!-- Progress -->
-        <div class="bg-white p-6 rounded-lg shadow relative h-fit">
-            <h2 class="text-lg font-semibold mb-2"><span id="titleMonthProgress">今月</span>の売上状況</h2>
-            <div class="text-3xl font-bold text-blue-600 mb-2">¥<span id="displayTotal">0</span></div>
-            <p class="text-sm text-gray-500 mb-4">月間目標: ¥<span id="displayTargetMin">35,000</span> 〜 ¥<span id="displayTargetMax">40,000</span></p>
-            <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
-                <div id="progressBar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+        <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-start mb-2">
+                    <h2 class="text-base font-semibold text-gray-700"><span id="titleMonthProgress">今月</span>の売上状況</h2>
+                    <button onclick="openSettings('target')" class="text-xs text-blue-600 hover:underline flex items-center gap-0.5">
+                        ✏️ 目標を変更
+                    </button>
+                </div>
+                <div class="text-3xl md:text-4xl font-extrabold text-blue-600 tracking-tight mb-2">
+                    ¥<span id="displayTotal">0</span>
+                </div>
+                <div class="flex items-center text-xs sm:text-sm text-gray-500 mb-3 gap-2">
+                    <span>月間目標:</span>
+                    <span class="font-bold text-gray-700">¥<span id="displayTargetMin">35,000</span></span>
+                    <span>〜</span>
+                    <span class="font-bold text-gray-700">¥<span id="displayTargetMax">40,000</span></span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-3.5 mb-2 overflow-hidden p-0.5 border border-gray-200">
+                    <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
             </div>
-            <p id="remainingText" class="text-sm font-medium text-red-500">目標まであと: ¥35,000</p>
+            <div class="pt-2 border-t border-gray-100 flex justify-between items-center">
+                <p id="remainingText" class="text-sm font-semibold text-red-500">目標まであと: ¥35,000</p>
+                <span id="achievementRate" class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">達成率 0%</span>
+            </div>
         </div>
 
         <!-- Predictions -->
-        <div class="bg-white p-6 rounded-lg shadow h-fit">
-            <h2 class="text-lg font-semibold mb-4">💡 目安と提案</h2>
+        <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 h-fit">
+            <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center gap-1.5">
+                <span>💡 目安と提案</span>
+            </h2>
             
             <!-- Take Home Suggestion -->
-            <div class="bg-green-50 p-4 rounded-lg mb-4 border border-green-200">
-                <h3 class="text-sm font-bold text-green-800 mb-2">📦 次回、持って帰る量（1回分）</h3>
-                <div class="mb-4">
-                    <h4 class="text-xs font-semibold text-green-700 bg-green-100 inline-block px-2 py-1 rounded mb-2">【基本】いつものペース</h4>
-                    <div id="takeHomeSuggest" class="text-green-900 leading-relaxed pl-2 border-l-2 border-green-300">データがありません</div>
+            <div class="bg-green-50/70 p-4 rounded-lg mb-3 border border-green-200">
+                <h3 class="text-xs font-bold text-green-900 uppercase tracking-wider mb-2">📦 次回、持って帰る量（1回分）</h3>
+                <div class="mb-3">
+                    <h4 class="text-xs font-semibold text-green-800 bg-green-200/70 inline-block px-2 py-0.5 rounded mb-1.5">【基本】いつものペース</h4>
+                    <div id="takeHomeSuggest" class="text-green-950 text-sm leading-relaxed pl-2 border-l-2 border-green-400">データがありません</div>
                 </div>
                 <div>
-                    <h4 class="text-xs font-semibold text-yellow-700 bg-yellow-100 inline-block px-2 py-1 rounded mb-2">【代案】8円と6.5円がもらえなかった場合</h4>
-                    <div id="takeHomeSuggestNo8" class="text-yellow-900 leading-relaxed pl-2 border-l-2 border-yellow-300">データがありません</div>
+                    <h4 class="text-xs font-semibold text-yellow-800 bg-yellow-200/80 inline-block px-2 py-0.5 rounded mb-1.5">【代案】8円・6.5円等がなく、4.5円ホースのみの場合</h4>
+                    <div id="takeHomeSuggestNo8" class="text-yellow-950 text-sm leading-relaxed pl-2 border-l-2 border-yellow-400">データがありません</div>
                 </div>
             </div>
 
             <!-- Weekly -->
-            <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-100">
-                <h3 class="text-sm font-bold text-blue-800">📅 1週間の納品ペース</h3>
-                <p class="text-sm text-blue-900 mt-1" id="paceNormal">データがありません</p>
+            <div class="bg-blue-50/70 p-3.5 rounded-lg mb-3 border border-blue-200">
+                <h3 class="text-xs font-bold text-blue-900 mb-1">📅 1週間の納品ペース</h3>
+                <p class="text-xs sm:text-sm text-blue-950 leading-relaxed" id="paceNormal">データがありません</p>
             </div>
 
             <!-- Total only 4.5 -->
-            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                <h3 class="text-sm font-bold text-red-800 mb-1">🎯 残りすべて4.5円で目標達成する場合</h3>
-                <p class="text-xs text-red-700 mb-2">今月の目標達成までに必要な【合計】の束数・本数です。</p>
-                <div id="totalRemainingOnly45" class="text-red-900 leading-relaxed pl-2 border-l-2 border-red-300">データがありません</div>
+            <div class="bg-red-50/70 p-3.5 rounded-lg border border-red-200">
+                <h3 class="text-xs font-bold text-red-900 mb-1">🎯 残りすべて4.5円で目標達成する場合</h3>
+                <p class="text-xs text-red-750 mb-1.5">今月の目標達成までに必要な【合計】の束数・本数（4.5円単独換算）</p>
+                <div id="totalRemainingOnly45" class="text-red-950 text-sm leading-relaxed pl-2 border-l-2 border-red-400">データがありません</div>
             </div>
         </div>
     </div>
 
+    <!-- Calendar View (NEW) -->
+    <section class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+            <div>
+                <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <span>📅 <span id="titleMonthCalendar">今月</span>の売上カレンダー</span>
+                </h2>
+                <p class="text-xs text-gray-500">日付をクリックするとその日の納品記録が入力・確認できます。<span class="inline-block w-2.5 h-2.5 bg-blue-100 rounded-sm ml-2 mr-0.5 border border-blue-300"></span>は設定された納品曜日です。</p>
+            </div>
+            <div class="text-xs font-semibold bg-gray-50 border border-gray-200 px-2.5 py-1 rounded text-gray-600">
+                納品実績日数: <span id="calendarDeliveredDaysCount" class="text-blue-600 font-bold text-sm">0</span> 日
+            </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+            <div class="grid grid-cols-7 bg-gray-100 border-b border-gray-200 text-center text-xs font-bold text-gray-600 py-2">
+                <div class="text-red-500">日</div>
+                <div>月</div>
+                <div>火</div>
+                <div>水</div>
+                <div>木</div>
+                <div>金</div>
+                <div class="text-blue-500">土</div>
+            </div>
+            <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-gray-100 text-xs">
+                <!-- Dynamically rendered -->
+            </div>
+        </div>
+    </section>
+
     <!-- Main Input & History -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- Input Form -->
-        <div class="md:col-span-1 bg-white p-6 rounded-lg shadow h-fit">
-            <h2 class="text-lg font-semibold mb-4">納品を記録</h2>
+        <div class="lg:col-span-5 bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 h-fit">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-900">納品を記録</h2>
+                <button onclick="openSettings('hoses')" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                    ＋ ホースの追加・編集
+                </button>
+            </div>
+
             <form id="recordForm" onsubmit="addRecord(event)">
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">日付</label>
-                    <input type="date" id="inputDate" required class="w-full border-gray-300 border rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">納品日</label>
+                    <input type="date" id="inputDate" required class="w-full border-gray-300 border rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <p class="text-xs text-gray-500 mb-3">※束と本の両方を入力できます（例：2束と15本）。</p>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">8円ホース (1束60本=480円)</label>
-                    <div class="flex gap-2">
-                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
-                            <input type="number" id="input8" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
-                            <span class="px-2 text-sm text-gray-500">束</span>
-                        </div>
-                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
-                            <input type="number" id="input8p" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
-                            <span class="px-2 text-sm text-gray-500">本</span>
-                        </div>
+
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-gray-700">ホース別の納品数</span>
+                    <span class="text-[11px] text-gray-400">束・本どちらでも入力可</span>
+                </div>
+
+                <!-- Dynamic Hose Inputs Container -->
+                <div id="dynamicHoseInputs" class="space-y-3 mb-4">
+                    <!-- Dynamically generated from state.hoseTypes -->
+                </div>
+
+                <div class="mb-5 bg-blue-50/70 border border-blue-200 rounded-lg p-3 text-sm text-gray-800 flex justify-between items-center">
+                    <span class="font-medium text-blue-900">今回の合計金額</span>
+                    <div class="text-right">
+                        <span class="text-xs text-gray-500 mr-1">計</span>
+                        <b class="text-xl text-blue-700 font-extrabold">¥<span id="inputPreview">0</span></b>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">6.5円ホース (1束130本=845円)</label>
-                    <div class="flex gap-2">
-                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
-                            <input type="number" id="input65" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
-                            <span class="px-2 text-sm text-gray-500">束</span>
-                        </div>
-                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
-                            <input type="number" id="input65p" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
-                            <span class="px-2 text-sm text-gray-500">本</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">4.5円ホース (1束80本=360円)</label>
-                    <div class="flex gap-2">
-                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
-                            <input type="number" id="input45" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
-                            <span class="px-2 text-sm text-gray-500">束</span>
-                        </div>
-                        <div class="flex-1 flex items-center border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
-                            <input type="number" id="input45p" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-2 outline-none rounded">
-                            <span class="px-2 text-sm text-gray-500">本</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-6 bg-gray-50 border border-gray-200 rounded p-2 text-sm text-gray-700 flex justify-between">
-                    <span>今回の金額</span>
-                    <b>¥<span id="inputPreview">0</span></b>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">記録を追加する</button>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm">
+                    納品記録を保存する
+                </button>
             </form>
         </div>
 
         <!-- History -->
-        <div class="md:col-span-2 bg-white p-6 rounded-lg shadow overflow-hidden">
-            <h2 class="text-lg font-semibold mb-4"><span id="titleMonthHistory">今月</span>の履歴</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
-                            <th class="py-3 px-4 text-left">日付</th>
-                            <th class="py-3 px-4 text-center">8円</th>
-                            <th class="py-3 px-4 text-center">6.5円</th>
-                            <th class="py-3 px-4 text-center">4.5円</th>
-                            <th class="py-3 px-4 text-right">金額</th>
-                            <th class="py-3 px-4 text-center">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTable" class="text-gray-600 font-light"></tbody>
-                </table>
-                <div id="noDataMsg" class="text-center py-4 text-gray-500 hidden">記録がありません</div>
+        <div class="lg:col-span-7 bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-900"><span id="titleMonthHistory">今月</span>の履歴</h2>
+                <span id="historyCountBadge" class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-medium">0件</span>
+            </div>
+            
+            <div class="overflow-x-auto -mx-5 md:-mx-6">
+                <div class="inline-block min-w-full align-middle px-5 md:px-6">
+                    <table class="min-w-full text-xs sm:text-sm">
+                        <thead>
+                            <tr id="historyTableHeader" class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
+                                <th class="py-2.5 px-3 text-left">日付</th>
+                                <!-- Dynamic Hose Header columns inserted here -->
+                                <th class="py-2.5 px-3 text-right">金額</th>
+                                <th class="py-2.5 px-3 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable" class="divide-y divide-gray-100 text-gray-700 font-normal"></tbody>
+                    </table>
+                    <div id="noDataMsg" class="text-center py-8 text-gray-400 text-sm hidden">
+                        この月の納品記録はまだありません
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
-            <h2 class="text-xl font-bold mb-4"><span id="settingsModalTitle"></span>月の目標設定</h2>
-            <p class="text-xs text-gray-500 mb-4">※ここで保存した設定は、現在選択中の月に適用されます。</p>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">月間目標 (最低ライン)</label>
-                <input type="number" id="settingTargetMin" step="1000" class="w-full border-gray-300 border rounded p-2">
+    <div id="settingsModal" class="modal fixed inset-0 bg-black/60 items-center justify-center z-50 p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">各種設定</h2>
+                    <p class="text-xs text-gray-500">月ごとの目標設定やホースの種類の変更が行えます</p>
+                </div>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200">
+                    ✕
+                </button>
             </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">月間目標 (上限)</label>
-                <input type="number" id="settingTargetMax" step="1000" class="w-full border-gray-300 border rounded p-2">
+
+            <!-- Settings Tabs -->
+            <div class="flex border-b border-gray-200 bg-white px-5 text-sm font-semibold">
+                <button id="tabBtnTarget" onclick="switchSettingsTab('target')" class="py-3 px-3 border-b-2 border-blue-600 text-blue-600">
+                    🎯 <span id="settingsModalMonthLabel">対象月</span>の目標設定
+                </button>
+                <button id="tabBtnHoses" onclick="switchSettingsTab('hoses')" class="py-3 px-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                    📦 ホースの種類・本数設定
+                </button>
             </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">納品する曜日</label>
-                <div class="flex flex-wrap gap-3">
-                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="0" class="mr-1"> 日</label>
-                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="1" class="mr-1"> 月</label>
-                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="2" class="mr-1"> 火</label>
-                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="3" class="mr-1"> 水</label>
-                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="4" class="mr-1"> 木</label>
-                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="5" class="mr-1"> 金</label>
-                    <label class="flex items-center"><input type="checkbox" name="deliveryDay" value="6" class="mr-1"> 土</label>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-5 overflow-y-auto space-y-5 text-sm flex-1">
+                <!-- Tab 1: Monthly Target Settings -->
+                <div id="tabContentTarget" class="space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
+                        📌 <b><span id="settingsTargetMonthDisplay"></span></b> の目標金額・納品曜日の設定です。月ごとに異なる設定を保存できます。
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">月間目標金額 (最低ライン)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-400">¥</span>
+                            <input type="number" id="settingTargetMin" step="1000" class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <p class="text-[11px] text-gray-400 mt-1">進捗バーの100%基準および提案計算に使用されます。</p>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-1">月間目標金額 (上限目安)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-400">¥</span>
+                            <input type="number" id="settingTargetMax" step="1000" class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-2">納品する曜日（この月の残日数の計算に使用）</label>
+                        <div class="grid grid-cols-7 gap-1 text-center">
+                            <label class="flex flex-col items-center p-2 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                <span class="text-xs font-bold text-red-500 mb-1">日</span>
+                                <input type="checkbox" name="deliveryDay" value="0" class="w-4 h-4 text-blue-600 rounded">
+                            </label>
+                            <label class="flex flex-col items-center p-2 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                <span class="text-xs font-bold text-gray-700 mb-1">月</span>
+                                <input type="checkbox" name="deliveryDay" value="1" class="w-4 h-4 text-blue-600 rounded">
+                            </label>
+                            <label class="flex flex-col items-center p-2 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                <span class="text-xs font-bold text-gray-700 mb-1">火</span>
+                                <input type="checkbox" name="deliveryDay" value="2" class="w-4 h-4 text-blue-600 rounded">
+                            </label>
+                            <label class="flex flex-col items-center p-2 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                <span class="text-xs font-bold text-gray-700 mb-1">水</span>
+                                <input type="checkbox" name="deliveryDay" value="3" class="w-4 h-4 text-blue-600 rounded">
+                            </label>
+                            <label class="flex flex-col items-center p-2 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                <span class="text-xs font-bold text-gray-700 mb-1">木</span>
+                                <input type="checkbox" name="deliveryDay" value="4" class="w-4 h-4 text-blue-600 rounded">
+                            </label>
+                            <label class="flex flex-col items-center p-2 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                <span class="text-xs font-bold text-gray-700 mb-1">金</span>
+                                <input type="checkbox" name="deliveryDay" value="5" class="w-4 h-4 text-blue-600 rounded">
+                            </label>
+                            <label class="flex flex-col items-center p-2 rounded border border-gray-200 cursor-pointer hover:bg-gray-50">
+                                <span class="text-xs font-bold text-blue-500 mb-1">土</span>
+                                <input type="checkbox" name="deliveryDay" value="6" class="w-4 h-4 text-blue-600 rounded">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Hose Master Management -->
+                <div id="tabContentHoses" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <p class="text-xs text-gray-600">扱うホースの種類、1束の本数、1本の単価を自由に変更・追加できます。</p>
+                        <button onclick="addNewHoseType()" class="text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded shadow-sm flex items-center gap-1">
+                            ＋ ホースを追加
+                        </button>
+                    </div>
+
+                    <div id="hoseManagerList" class="space-y-3">
+                        <!-- Dynamic Hose Settings Cards -->
+                    </div>
+
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 leading-relaxed">
+                        ⚠️ <b>代案の計算について:</b><br>
+                        「4.5円ホース」として指定されたホースのみが【代案】（他のホースがもらえなかった場合の計算）の基準になります。
+                    </div>
                 </div>
             </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeSettings()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">キャンセル</button>
-                <button onclick="saveSettings()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">保存</button>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-200 flex justify-end gap-2 bg-gray-50">
+                <button onclick="closeSettings()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-100">
+                    キャンセル
+                </button>
+                <button onclick="saveAllSettings()" class="px-5 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-sm">
+                    設定を保存する
+                </button>
             </div>
         </div>
     </div>
 
     <script>
+        // Default Hose Master
+        const DEFAULT_HOSE_TYPES = [
+            { id: 'h_8', name: '8円ホース', pricePerPiece: 8, bundlePieces: 60, isDefault45: false },
+            { id: 'h_65', name: '6.5円ホース', pricePerPiece: 6.5, bundlePieces: 130, isDefault45: false },
+            { id: 'h_45', name: '4.5円ホース', pricePerPiece: 4.5, bundlePieces: 80, isDefault45: true }
+        ];
+
         let state = {
             monthlySettings: {}, 
-            records: []
+            records: [],
+            hoseTypes: JSON.parse(JSON.stringify(DEFAULT_HOSE_TYPES))
         };
+
         let lastCheckedMonth = "";
         let lastCheckedDate = "";
+        let currentSettingsTab = "target";
 
         function init() {
             const saved = localStorage.getItem('hoseData');
             if (saved) {
-                const parsed = JSON.parse(saved);
-                state.records = parsed.records || [];
-                if (parsed.monthlySettings) {
-                    state.monthlySettings = parsed.monthlySettings;
-                } else {
-                    state.monthlySettings = {
-                        'default': { targetMin: parsed.targetMin || 35000, targetMax: parsed.targetMax || 40000, deliveryDays: parsed.deliveryDays || [1, 4] }
-                    };
+                try {
+                    const parsed = JSON.parse(saved);
+                    state.records = parsed.records || [];
+                    state.monthlySettings = parsed.monthlySettings || {};
+                    
+                    // Monthly Settings fallback
+                    if (!parsed.monthlySettings && (parsed.targetMin || parsed.deliveryDays)) {
+                        state.monthlySettings['default'] = {
+                            targetMin: parsed.targetMin || 35000,
+                            targetMax: parsed.targetMax || 40000,
+                            deliveryDays: parsed.deliveryDays || [1, 4]
+                        };
+                    }
+                    if (!state.monthlySettings['default']) {
+                        state.monthlySettings['default'] = { targetMin: 35000, targetMax: 40000, deliveryDays: [1, 4] };
+                    }
+
+                    // Hose Types Migration
+                    if (parsed.hoseTypes && Array.isArray(parsed.hoseTypes) && parsed.hoseTypes.length > 0) {
+                        state.hoseTypes = parsed.hoseTypes;
+                    } else {
+                        state.hoseTypes = JSON.parse(JSON.stringify(DEFAULT_HOSE_TYPES));
+                    }
+
+                    // Migrate old records to support dynamic hoses
+                    migrateRecords();
+                } catch(e) {
+                    console.error("Data parse error", e);
                 }
             } else {
                 state.monthlySettings = { 'default': { targetMin: 35000, targetMax: 40000, deliveryDays: [1, 4] } };
+                state.hoseTypes = JSON.parse(JSON.stringify(DEFAULT_HOSE_TYPES));
             }
+
             setDatesToToday();
+            renderHoseInputs();
             updateUI();
-            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkAndAutoUpdateDate(); });
+
+            document.addEventListener('visibilitychange', () => { 
+                if (document.visibilityState === 'visible') checkAndAutoUpdateDate(); 
+            });
             window.addEventListener('focus', checkAndAutoUpdateDate);
+        }
+
+        // Migrate records so that both old structure {b8, p8, ...} and new dynamic structure { items: { hoseId: {b, p} } } work seamlessly
+        function migrateRecords() {
+            state.records.forEach(r => {
+                if (!r.items) {
+                    r.items = {};
+                    if (r.b8 !== undefined || r.p8 !== undefined) {
+                        r.items['h_8'] = { b: r.b8 || 0, p: r.p8 || 0 };
+                    }
+                    if (r.b65 !== undefined || r.p65 !== undefined) {
+                        r.items['h_65'] = { b: r.b65 || 0, p: r.p65 || 0 };
+                    }
+                    if (r.b45 !== undefined || r.p45 !== undefined) {
+                        r.items['h_45'] = { b: r.b45 || 0, p: r.p45 || 0 };
+                    }
+                }
+            });
         }
 
         function setDatesToToday() {
@@ -251,34 +436,74 @@
         }
 
         function getActiveSettings(monthStr) {
-            return state.monthlySettings[monthStr] || state.monthlySettings['default'];
+            return state.monthlySettings[monthStr] || state.monthlySettings['default'] || { targetMin: 35000, targetMax: 40000, deliveryDays: [1, 4] };
         }
 
-        function changeMonth() { updateUI(); }
+        function changeMonth() { 
+            updateUI(); 
+        }
 
-        // 束・本の入力値を読み取る
+        // Render dynamic input fields for each hose in the Record Form
+        function renderHoseInputs() {
+            const container = document.getElementById('dynamicHoseInputs');
+            container.innerHTML = '';
+
+            state.hoseTypes.forEach(h => {
+                const bundlePrice = Math.round(h.pricePerPiece * h.bundlePieces * 10) / 10;
+                const div = document.createElement('div');
+                div.className = 'p-2.5 bg-gray-50 border border-gray-200 rounded-lg';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-xs font-bold text-gray-800">${h.name}</span>
+                        <span class="text-[11px] text-gray-500">1束${h.bundlePieces}本=¥${bundlePrice.toLocaleString()} (1本¥${h.pricePerPiece})</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 flex items-center bg-white border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input_b_${h.id}" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-1.5 text-sm outline-none rounded font-medium">
+                            <span class="px-2 text-xs text-gray-500 font-semibold">束</span>
+                        </div>
+                        <div class="flex-1 flex items-center bg-white border border-gray-300 rounded focus-within:ring-2 focus-within:ring-blue-500">
+                            <input type="number" id="input_p_${h.id}" min="0" value="0" oninput="updateInputPreview()" class="w-full min-w-0 p-1.5 text-sm outline-none rounded font-medium">
+                            <span class="px-2 text-xs text-gray-500 font-semibold">本</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            updateInputPreview();
+        }
+
+        // Calculate amount from inputs
         function readQtyInputs() {
-            const v = id => Math.max(0, parseInt(document.getElementById(id).value) || 0);
-            return {
-                b8: v('input8'), p8: v('input8p'),
-                b65: v('input65'), p65: v('input65p'),
-                b45: v('input45'), p45: v('input45p')
-            };
+            const items = {};
+            let hasAny = false;
+            state.hoseTypes.forEach(h => {
+                const bEl = document.getElementById(`input_b_${h.id}`);
+                const pEl = document.getElementById(`input_p_${h.id}`);
+                const b = bEl ? Math.max(0, parseInt(bEl.value) || 0) : 0;
+                const p = pEl ? Math.max(0, parseInt(pEl.value) || 0) : 0;
+                if (b > 0 || p > 0) hasAny = true;
+                items[h.id] = { b, p };
+            });
+            return { items, hasAny };
         }
 
-        // 金額計算（束単価 + 1本単価）。6.5円の端数対策で小数第1位に丸める
-        function calcTotal(q) {
-            const total = (q.b8 * 480) + (q.p8 * 8)
-                        + (q.b65 * 845) + (q.p65 * 6.5)
-                        + (q.b45 * 360) + (q.p45 * 4.5);
+        function calcTotalForItems(items) {
+            let total = 0;
+            state.hoseTypes.forEach(h => {
+                const item = items[h.id] || { b: 0, p: 0 };
+                const bundlePrice = h.pricePerPiece * h.bundlePieces;
+                total += (item.b * bundlePrice) + (item.p * h.pricePerPiece);
+            });
             return Math.round(total * 10) / 10;
         }
 
         function updateInputPreview() {
-            document.getElementById('inputPreview').innerText = calcTotal(readQtyInputs()).toLocaleString();
+            const { items } = readQtyInputs();
+            const total = calcTotalForItems(items);
+            document.getElementById('inputPreview').innerText = total.toLocaleString();
         }
 
-        // 履歴表示用: 「2束+15本」「15本」「2束」「-」
         function formatQty(b, p) {
             b = b || 0; p = p || 0;
             if (b === 0 && p === 0) return '<span class="text-gray-300">-</span>';
@@ -290,12 +515,38 @@
         function addRecord(e) {
             e.preventDefault();
             const date = document.getElementById('inputDate').value;
-            const q = readQtyInputs();
-            if (Object.values(q).every(n => n === 0)) { alert('束数または本数を入力してください'); return; }
-            const total = calcTotal(q);
-            state.records.push({ id: Date.now().toString(), date: date, ...q, total: total });
-            ['input8', 'input8p', 'input65', 'input65p', 'input45', 'input45p'].forEach(id => document.getElementById(id).value = 0);
+            const { items, hasAny } = readQtyInputs();
+            if (!hasAny) { 
+                alert('束数または本数を入力してください'); 
+                return; 
+            }
+            const total = calcTotalForItems(items);
+            
+            // Record object includes dynamic items
+            const newRecord = { 
+                id: Date.now().toString(), 
+                date: date, 
+                items: items, 
+                total: total 
+            };
+            
+            // Also maintain legacy keys if standard hoses are present
+            if (items['h_8']) { newRecord.b8 = items['h_8'].b; newRecord.p8 = items['h_8'].p; }
+            if (items['h_65']) { newRecord.b65 = items['h_65'].b; newRecord.p65 = items['h_65'].p; }
+            if (items['h_45']) { newRecord.b45 = items['h_45'].b; newRecord.p45 = items['h_45'].p; }
+
+            state.records.push(newRecord);
+
+            // Reset inputs
+            state.hoseTypes.forEach(h => {
+                const bEl = document.getElementById(`input_b_${h.id}`);
+                const pEl = document.getElementById(`input_p_${h.id}`);
+                if (bEl) bEl.value = 0;
+                if (pEl) pEl.value = 0;
+            });
             updateInputPreview();
+            
+            // Navigate month selector if recording for another month
             document.getElementById('monthSelector').value = date.substring(0, 7);
             saveData();
             updateUI();
@@ -309,7 +560,16 @@
             }
         }
 
-        function saveData() { localStorage.setItem('hoseData', JSON.stringify(state)); }
+        function saveData() { 
+            localStorage.setItem('hoseData', JSON.stringify(state)); 
+        }
+
+        // Click calendar day to populate date in form
+        function selectCalendarDate(dateStr) {
+            document.getElementById('inputDate').value = dateStr;
+            const inputFormEl = document.getElementById('recordForm');
+            inputFormEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
 
         function updateUI() {
             const selectedMonthStr = document.getElementById('monthSelector').value; 
@@ -317,77 +577,206 @@
             const today = new Date();
             const offset = today.getTimezoneOffset() * 60000;
             const currentRealMonth = (new Date(today - offset)).toISOString().substring(0, 7);
-            const btnCurrentMonth = document.getElementById('btnCurrentMonth');
+            const currentRealDate = (new Date(today - offset)).toISOString().substring(0, 10);
             
+            const btnCurrentMonth = document.getElementById('btnCurrentMonth');
             if(selectedMonthStr !== currentRealMonth) {
-                btnCurrentMonth.classList.remove('hidden'); btnCurrentMonth.classList.add('block');
+                btnCurrentMonth.classList.remove('hidden'); 
+                btnCurrentMonth.classList.add('block');
             } else {
-                btnCurrentMonth.classList.add('hidden'); btnCurrentMonth.classList.remove('block');
+                btnCurrentMonth.classList.add('hidden'); 
+                btnCurrentMonth.classList.remove('block');
             }
 
             const [y, m] = selectedMonthStr.split('-');
-            document.getElementById('titleMonthProgress').innerText = `${y}年${parseInt(m)}月`;
-            document.getElementById('titleMonthHistory').innerText = `${y}年${parseInt(m)}月`;
+            const monthDisplay = `${y}年${parseInt(m)}月`;
+            document.getElementById('titleMonthProgress').innerText = monthDisplay;
+            document.getElementById('titleMonthHistory').innerText = monthDisplay;
+            document.getElementById('titleMonthCalendar').innerText = monthDisplay;
 
             let monthTotal = 0;
-            let sumB8 = 0;
-            let sumB65 = 0;
-            let sumB45 = 0;
+            
+            // Sum per hose type (bundle equivalents)
+            const sumBundlesPerHose = {};
+            state.hoseTypes.forEach(h => { sumBundlesPerHose[h.id] = 0; });
 
+            // Sort records descending
             state.records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Setup History Table Headers dynamically
+            const headerRow = document.getElementById('historyTableHeader');
+            headerRow.innerHTML = `<th class="py-2.5 px-3 text-left">日付</th>`;
+            state.hoseTypes.forEach(h => {
+                headerRow.innerHTML += `<th class="py-2.5 px-3 text-center whitespace-nowrap">${h.name}</th>`;
+            });
+            headerRow.innerHTML += `<th class="py-2.5 px-3 text-right">金額</th><th class="py-2.5 px-3 text-center">操作</th>`;
+
             const tbody = document.getElementById('historyTable');
             tbody.innerHTML = '';
-            let hasRecordsInMonth = false;
+            let monthRecordCount = 0;
+            const dailyTotals = {}; // dateStr => total
 
             state.records.forEach(r => {
                 if (r.date.startsWith(selectedMonthStr)) {
-                    hasRecordsInMonth = true;
+                    monthRecordCount++;
                     monthTotal += r.total;
-                    // 比率計算用に本数を束換算して加算
-                    sumB8 += (r.b8 || 0) + (r.p8 || 0) / 60;
-                    sumB65 += (r.b65 || 0) + (r.p65 || 0) / 130;
-                    sumB45 += (r.b45 || 0) + (r.p45 || 0) / 80;
+                    dailyTotals[r.date] = (dailyTotals[r.date] || 0) + r.total;
+
+                    // Aggregate bundles
+                    state.hoseTypes.forEach(h => {
+                        let b = 0, p = 0;
+                        if (r.items && r.items[h.id]) {
+                            b = r.items[h.id].b || 0;
+                            p = r.items[h.id].p || 0;
+                        } else if (h.id === 'h_8') {
+                            b = r.b8 || 0; p = r.p8 || 0;
+                        } else if (h.id === 'h_65') {
+                            b = r.b65 || 0; p = r.p65 || 0;
+                        } else if (h.id === 'h_45') {
+                            b = r.b45 || 0; p = r.p45 || 0;
+                        }
+                        sumBundlesPerHose[h.id] += b + (p / (h.bundlePieces || 1));
+                    });
+
+                    // Build table row
                     const tr = document.createElement('tr');
-                    tr.className = 'border-b border-gray-200 hover:bg-gray-50';
-                    tr.innerHTML = `<td class="py-3 px-4 text-left whitespace-nowrap">${r.date}</td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap">${formatQty(r.b8, r.p8)}</td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap">${formatQty(r.b65, r.p65)}</td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap">${formatQty(r.b45, r.p45)}</td>
-                        <td class="py-3 px-4 text-right">¥${r.total.toLocaleString()}</td>
-                        <td class="py-3 px-4 text-center"><button onclick="deleteRecord('${r.id}')" class="text-red-500 hover:text-red-700">🗑️</button></td>`;
+                    tr.className = 'border-b border-gray-100 hover:bg-gray-50/80 transition-colors';
+                    let colsHtml = `<td class="py-2.5 px-3 text-left whitespace-nowrap font-medium text-gray-900">${r.date}</td>`;
+                    
+                    state.hoseTypes.forEach(h => {
+                        let b = 0, p = 0;
+                        if (r.items && r.items[h.id]) {
+                            b = r.items[h.id].b || 0; p = r.items[h.id].p || 0;
+                        } else if (h.id === 'h_8') {
+                            b = r.b8 || 0; p = r.p8 || 0;
+                        } else if (h.id === 'h_65') {
+                            b = r.b65 || 0; p = r.p65 || 0;
+                        } else if (h.id === 'h_45') {
+                            b = r.b45 || 0; p = r.p45 || 0;
+                        }
+                        colsHtml += `<td class="py-2.5 px-3 text-center whitespace-nowrap">${formatQty(b, p)}</td>`;
+                    });
+
+                    colsHtml += `
+                        <td class="py-2.5 px-3 text-right font-bold text-gray-900 whitespace-nowrap">¥${r.total.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                            <button onclick="deleteRecord('${r.id}')" title="削除" class="text-red-400 hover:text-red-600 transition-colors p-1">🗑️</button>
+                        </td>
+                    `;
+                    tr.innerHTML = colsHtml;
                     tbody.appendChild(tr);
                 }
             });
 
-            document.getElementById('noDataMsg').classList.toggle('hidden', hasRecordsInMonth);
+            document.getElementById('noDataMsg').classList.toggle('hidden', monthRecordCount > 0);
+            document.getElementById('historyCountBadge').innerText = `${monthRecordCount}件`;
             document.getElementById('displayTotal').innerText = monthTotal.toLocaleString();
             document.getElementById('displayTargetMin').innerText = activeSettings.targetMin.toLocaleString();
             document.getElementById('displayTargetMax').innerText = activeSettings.targetMax.toLocaleString();
 
             const remaining = Math.max(0, activeSettings.targetMin - monthTotal);
-            const progress = Math.min(100, (monthTotal / activeSettings.targetMin) * 100);
+            const progress = activeSettings.targetMin > 0 ? Math.min(100, (monthTotal / activeSettings.targetMin) * 100) : 100;
             document.getElementById('progressBar').style.width = progress + '%';
-            
+            document.getElementById('achievementRate').innerText = `達成率 ${Math.round(progress)}%`;
+
             const remainingText = document.getElementById('remainingText');
             if (remaining === 0) {
-                remainingText.innerText = '🎉 目標達成しました！'; remainingText.className = 'text-sm font-bold text-green-600 mt-2';
+                remainingText.innerText = '🎉 目標達成しました！'; 
+                remainingText.className = 'text-sm font-bold text-green-600';
             } else {
-                remainingText.innerText = `目標まであと: ¥${remaining.toLocaleString()}`; remainingText.className = 'text-sm font-medium text-red-500 mt-2';
+                remainingText.innerText = `目標まであと: ¥${remaining.toLocaleString()}`; 
+                remainingText.className = 'text-sm font-semibold text-red-500';
             }
 
-            updatePredictions(remaining, sumB8, sumB65, sumB45, selectedMonthStr, activeSettings);
+            // Render Calendar
+            renderCalendar(selectedMonthStr, dailyTotals, activeSettings, currentRealDate);
+
+            // Update Predictions
+            updatePredictions(remaining, sumBundlesPerHose, selectedMonthStr, activeSettings);
         }
 
-        function updatePredictions(remaining, sumB8, sumB65, sumB45, selectedMonthStr, activeSettings) {
+        // Render Calendar Grid
+        function renderCalendar(monthStr, dailyTotals, activeSettings, todayStr) {
+            const [year, month] = monthStr.split('-').map(Number);
+            const firstDayIndex = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Delivered days count
+            const deliveredDaysCount = Object.keys(dailyTotals).length;
+            document.getElementById('calendarDeliveredDaysCount').innerText = deliveredDaysCount;
+
+            // Empty cells before month starts
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'calendar-cell bg-gray-50/50 p-1.5 border-gray-100';
+                grid.appendChild(emptyCell);
+            }
+
+            // Month days
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayOfWeek = new Date(year, month - 1, d).getDay();
+                const isScheduledDay = activeSettings.deliveryDays.includes(dayOfWeek);
+                const isToday = dateStr === todayStr;
+                const dailyEarned = dailyTotals[dateStr];
+
+                const cell = document.createElement('div');
+                
+                let cellBg = isScheduledDay ? 'bg-blue-50/40 hover:bg-blue-100/50' : 'bg-white hover:bg-gray-50';
+                if (isToday) cellBg += ' ring-2 ring-blue-500 ring-inset';
+
+                cell.className = `calendar-cell p-1.5 flex flex-col justify-between cursor-pointer transition-colors relative border-gray-100 ${cellBg}`;
+                cell.onclick = () => selectCalendarDate(dateStr);
+                cell.title = `${dateStr} を選択して納品を記録`;
+
+                let dayColor = 'text-gray-700';
+                if (dayOfWeek === 0) dayColor = 'text-red-500';
+                if (dayOfWeek === 6) dayColor = 'text-blue-500';
+
+                let earnedBadge = '';
+                if (dailyEarned !== undefined) {
+                    earnedBadge = `
+                        <div class="mt-1 bg-emerald-600 text-white font-extrabold text-[10px] sm:text-xs py-0.5 px-1 rounded shadow-sm text-center">
+                            ¥${dailyEarned.toLocaleString()}
+                        </div>
+                    `;
+                } else if (isScheduledDay) {
+                    earnedBadge = `<div class="text-[10px] text-blue-400 font-medium text-center mt-1">納品予定日</div>`;
+                }
+
+                cell.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="font-bold ${dayColor} text-xs leading-none">${d}</span>
+                        ${isToday ? '<span class="text-[9px] bg-blue-600 text-white font-bold px-1 rounded">今日</span>' : ''}
+                    </div>
+                    <div>${earnedBadge}</div>
+                `;
+
+                grid.appendChild(cell);
+            }
+        }
+
+        // Prediction & Pace Logic
+        function updatePredictions(remaining, sumBundlesPerHose, selectedMonthStr, activeSettings) {
             const paceNormal = document.getElementById('paceNormal');
             const takeHomeSuggest = document.getElementById('takeHomeSuggest');
             const takeHomeSuggestNo8 = document.getElementById('takeHomeSuggestNo8');
             const totalRemainingOnly45 = document.getElementById('totalRemainingOnly45');
 
+            // Find 4.5 hose definition (fallback to first or standard)
+            const hose45 = state.hoseTypes.find(h => h.isDefault45) || 
+                          state.hoseTypes.find(h => h.pricePerPiece === 4.5) || 
+                          state.hoseTypes[state.hoseTypes.length - 1];
+            
+            const bundlePrice45 = hose45 ? (hose45.pricePerPiece * hose45.bundlePieces) : 360;
+            const pcsPerBundle45 = hose45 ? hose45.bundlePieces : 80;
+
             if (remaining === 0) {
                 paceNormal.innerText = "目標達成済みのため、納品は不要です。";
                 takeHomeSuggest.innerHTML = "<span class='font-bold text-green-600'>🎉 今月の目標は達成済みです！</span>";
-                takeHomeSuggestNo8.innerHTML = "<span class='text-gray-500'>-</span>";
+                takeHomeSuggestNo8.innerHTML = "<span class='text-gray-400'>-</span>";
                 totalRemainingOnly45.innerHTML = "<span class='font-bold text-green-600'>🎉 達成済みです！</span>";
                 return;
             }
@@ -401,7 +790,9 @@
             }
 
             const recordedDates = new Set();
-            state.records.forEach(r => { if (r.date.startsWith(selectedMonthStr)) recordedDates.add(r.date); });
+            state.records.forEach(r => { 
+                if (r.date.startsWith(selectedMonthStr)) recordedDates.add(r.date); 
+            });
             const completedDays = recordedDates.size;
 
             const today = new Date();
@@ -416,117 +807,285 @@
                 if (deliveryDaysLeft < 0) deliveryDaysLeft = 0;
             }
 
-            // Smoothing logic (Ratio calculation)
-            const baseWeight8 = 2; const baseWeight65 = 1; const baseWeight45 = 4;
-            const smoothed8 = sumB8 + baseWeight8; 
-            const smoothed65 = sumB65 + baseWeight65; 
-            const smoothed45 = sumB45 + baseWeight45;
-            const totalSmoothed = smoothed8 + smoothed65 + smoothed45;
-            let ratio8 = smoothed8 / totalSmoothed; 
-            let ratio65 = smoothed65 / totalSmoothed; 
-            let ratio45 = smoothed45 / totalSmoothed;
+            // Dynamic Smoothing logic across all hoses
+            let totalSmoothed = 0;
+            const ratios = {};
+            state.hoseTypes.forEach(h => {
+                const recorded = sumBundlesPerHose[h.id] || 0;
+                // Base weight for smoothing
+                const weight = (h.isDefault45 || h.pricePerPiece <= 5) ? 3 : 2;
+                const smoothed = recorded + weight;
+                ratios[h.id] = smoothed;
+                totalSmoothed += smoothed;
+            });
 
-            const avgBundlePrice = (ratio8 * 480) + (ratio65 * 845) + (ratio45 * 360);
-            const totalBundlesNeeded = Math.ceil(remaining / avgBundlePrice);
+            let weightedAvgBundlePrice = 0;
+            state.hoseTypes.forEach(h => {
+                const ratio = ratios[h.id] / totalSmoothed;
+                ratios[h.id] = ratio;
+                const bPrice = h.pricePerPiece * h.bundlePieces;
+                weightedAvgBundlePrice += (ratio * bPrice);
+            });
+
+            const totalBundlesNeeded = Math.ceil(remaining / (weightedAvgBundlePrice || 400));
             
-            // Only 4.5 Calculation Logic
-            const totalBundlesNeededOnly45 = Math.ceil(remaining / 360);
-            const totalPcsOnly45 = totalBundlesNeededOnly45 * 80;
+            // Only 4.5 Calculation (Strict: ONLY 4.5 hose counted, others are completely excluded)
+            const totalBundlesNeededOnly45 = Math.ceil(remaining / bundlePrice45);
+            const totalPcsOnly45 = totalBundlesNeededOnly45 * pcsPerBundle45;
             
             totalRemainingOnly45.innerHTML = `
-                <div class="mb-1 text-gray-500 text-sm">目標達成まで、あと合計で：</div>
-                <div><b>4.5円ホース： <span class="text-2xl text-red-600">${totalBundlesNeededOnly45.toLocaleString()}</span> 束</b> <span class="text-sm text-red-800">（約 ${totalPcsOnly45.toLocaleString()} 本）</span></div>
+                <div class="mb-1 text-gray-500 text-xs">目標達成まで、あと合計で：</div>
+                <div><b>${hose45.name}： <span class="text-xl text-red-600 font-bold">${totalBundlesNeededOnly45.toLocaleString()}</span> 束</b> <span class="text-xs text-red-800">（約 ${totalPcsOnly45.toLocaleString()} 本）</span></div>
             `;
 
             if (selectedMonthStr < currentMonthStr) {
                 paceNormal.innerHTML = `この月の納品は終了しています。<br>（未達成金額: ¥${remaining.toLocaleString()}）`;
-                takeHomeSuggest.innerHTML = `<span class='text-gray-600'>過去の月のため、提案はありません。</span>`;
-                takeHomeSuggestNo8.innerHTML = `<span class='text-gray-600'>-</span>`;
+                takeHomeSuggest.innerHTML = `<span class='text-gray-500'>過去の月のため、提案はありません。</span>`;
+                takeHomeSuggestNo8.innerHTML = `<span class='text-gray-500'>-</span>`;
             } else if (deliveryDaysLeft > 0) {
-                const deliveriesPerWeek = activeSettings.deliveryDays.length;
+                const deliveriesPerWeek = Math.max(1, activeSettings.deliveryDays.length);
                 const bundlesPerDelivery = totalBundlesNeeded / deliveryDaysLeft;
-                const est8Takehome = Math.round(bundlesPerDelivery * ratio8);
-                const est65Takehome = Math.round(bundlesPerDelivery * ratio65);
-                const est45Takehome = Math.round(bundlesPerDelivery * ratio45);
-                const pcs8 = est8Takehome * 60; 
-                const pcs65 = est65Takehome * 130; 
-                const pcs45 = est45Takehome * 80;
                 
-                takeHomeSuggest.innerHTML = `
-                    <div class="mb-1"><b>8円ホース： <span class="text-xl">${est8Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs8.toLocaleString()} 本）</span></div>
-                    <div class="mb-1"><b>6.5円ホース： <span class="text-xl">${est65Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs65.toLocaleString()} 本）</span></div>
-                    <div><b>4.5円ホース： <span class="text-xl">${est45Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs45.toLocaleString()} 本）</span></div>
-                `;
+                // Normal Suggestion (All dynamic hoses)
+                let suggestHtml = '';
+                const weeklyPaceParts = [];
 
-                // No 8 and 6.5 Suggestion (Only 4.5)
-                const bundlesPerDeliveryOnly45 = totalBundlesNeededOnly45 / deliveryDaysLeft;
-                const est45TakehomeOnly45 = Math.ceil(bundlesPerDeliveryOnly45);
-                const pcs45Only45 = est45TakehomeOnly45 * 80;
-                
-                takeHomeSuggestNo8.innerHTML = `
-                    <div class="mb-1"><span class="text-gray-500">8円ホース： 0 束</span></div>
-                    <div class="mb-1"><span class="text-gray-500">6.5円ホース： 0 束</span></div>
-                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeOnly45}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45Only45.toLocaleString()} 本）</span></div>
+                state.hoseTypes.forEach(h => {
+                    const ratio = ratios[h.id];
+                    const estTakehome = Math.round(bundlesPerDelivery * ratio);
+                    const pcs = estTakehome * h.bundlePieces;
+                    suggestHtml += `
+                        <div class="mb-1">
+                            <b>${h.name}： <span class="text-base text-gray-900 font-bold">${estTakehome}</span> 束</b> 
+                            <span class="text-xs text-green-800">（約 ${pcs.toLocaleString()} 本）</span>
+                        </div>
+                    `;
+
+                    const estWeek = Math.round((bundlesPerDelivery * deliveriesPerWeek) * ratio);
+                    weeklyPaceParts.push(`<b>${h.name} : ${estWeek}束</b>`);
+                });
+                takeHomeSuggest.innerHTML = suggestHtml;
+
+                // Strict Alternative Plan: ONLY 4.5 hose counted, other hoses are NOT counted
+                const bundlesPerDeliveryOnly45 = Math.ceil(totalBundlesNeededOnly45 / deliveryDaysLeft);
+                const pcsOnly45PerDelivery = bundlesPerDeliveryOnly45 * pcsPerBundle45;
+
+                let suggestNo8Html = '';
+                // Other hoses explicitly shown as 0 or excluded
+                state.hoseTypes.forEach(h => {
+                    if (h.id === hose45.id) {
+                        suggestNo8Html += `
+                            <div class="mt-1">
+                                <b>${h.name}： <span class="text-lg text-yellow-800 font-bold">${bundlesPerDeliveryOnly45}</span> 束</b> 
+                                <span class="text-xs text-yellow-900">（約 ${pcsOnly45PerDelivery.toLocaleString()} 本）</span>
+                            </div>
+                        `;
+                    } else {
+                        suggestNo8Html += `
+                            <div class="text-xs text-gray-400">
+                                <span>${h.name}： 0 束（0 本）</span>
+                            </div>
+                        `;
+                    }
+                });
+                takeHomeSuggestNo8.innerHTML = suggestNo8Html;
+
+                // 1-Week Pace includes all dynamic hoses
+                paceNormal.innerHTML = `
+                    対象月の納品予定日は残り <b>${deliveryDaysLeft}回</b> です。<br>
+                    1週間あたりおよそ [ ${weeklyPaceParts.join(' / ')} ] 持っていくと目標に届きます。
                 `;
-                
-                const bundlesPerWeek = bundlesPerDelivery * deliveriesPerWeek;
-                const est8Week = Math.round(bundlesPerWeek * ratio8);
-                const est65Week = Math.round(bundlesPerWeek * ratio65);
-                const est45Week = Math.round(bundlesPerWeek * ratio45);
-                paceNormal.innerHTML = `対象月の納品日は残り <b>${deliveryDaysLeft}回</b> です。<br>1週間あたりおよそ <b>8円:${est8Week}束 / 6.5円:${est65Week}束 / 4.5円:${est45Week}束</b> 持っていくと目標に届きます。`;
-                
             } else {
-                const est8Takehome = Math.round(totalBundlesNeeded * ratio8);
-                const est65Takehome = Math.round(totalBundlesNeeded * ratio65);
-                const est45Takehome = Math.round(totalBundlesNeeded * ratio45);
-                const pcs8 = est8Takehome * 60; 
-                const pcs65 = est65Takehome * 130;
-                const pcs45 = est45Takehome * 80;
+                // When scheduled days are finished but goal is not met
+                let suggestHtml = `<p class="text-xs text-red-600 font-bold mb-1.5">※今月の予定納品日は終了していますが、目標未達成のため追加で必要な量です。</p>`;
+                state.hoseTypes.forEach(h => {
+                    const ratio = ratios[h.id];
+                    const estTakehome = Math.round(totalBundlesNeeded * ratio);
+                    const pcs = estTakehome * h.bundlePieces;
+                    suggestHtml += `
+                        <div class="mb-1">
+                            <b>${h.name}： <span class="text-base font-bold">${estTakehome}</span> 束</b> 
+                            <span class="text-xs text-green-800">（約 ${pcs.toLocaleString()} 本）</span>
+                        </div>
+                    `;
+                });
+                takeHomeSuggest.innerHTML = suggestHtml;
 
-                takeHomeSuggest.innerHTML = `
-                    <p class="text-sm text-red-600 font-bold mb-2">※予定納品日は終了していますが、目標未達成のため追加で必要な量です。</p>
-                    <div class="mb-1"><b>8円ホース： <span class="text-xl">${est8Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs8.toLocaleString()} 本）</span></div>
-                    <div class="mb-1"><b>6.5円ホース： <span class="text-xl">${est65Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs65.toLocaleString()} 本）</span></div>
-                    <div><b>4.5円ホース： <span class="text-xl">${est45Takehome}</span> 束</b> <span class="text-sm text-green-700">（約 ${pcs45.toLocaleString()} 本）</span></div>
-                `;
-                
-                const est45TakehomeOnly45 = totalBundlesNeededOnly45;
-                const pcs45Only45 = est45TakehomeOnly45 * 80;
-
-                takeHomeSuggestNo8.innerHTML = `
-                    <div class="mb-1"><span class="text-gray-500">8円ホース： 0 束</span></div>
-                    <div class="mb-1"><span class="text-gray-500">6.5円ホース： 0 束</span></div>
-                    <div><b>4.5円ホース： <span class="text-xl text-yellow-700">${est45TakehomeOnly45}</span> 束</b> <span class="text-sm text-yellow-700">（約 ${pcs45Only45.toLocaleString()} 本）</span></div>
-                `;
+                let suggestNo8Html = '';
+                state.hoseTypes.forEach(h => {
+                    if (h.id === hose45.id) {
+                        suggestNo8Html += `
+                            <div class="mt-1">
+                                <b>${h.name}： <span class="text-lg text-yellow-800 font-bold">${totalBundlesNeededOnly45}</span> 束</b> 
+                                <span class="text-xs text-yellow-900">（約 ${totalPcsOnly45.toLocaleString()} 本）</span>
+                            </div>
+                        `;
+                    } else {
+                        suggestNo8Html += `<div class="text-xs text-gray-400"><span>${h.name}： 0 束</span></div>`;
+                    }
+                });
+                takeHomeSuggestNo8.innerHTML = suggestNo8Html;
 
                 paceNormal.innerHTML = `対象月の予定納品日はすべて完了しました。<br>（不足分として追加で必要です）`;
             }
         }
 
-        function openSettings() {
+        // Settings Modal Management
+        function openSettings(initialTab = 'target') {
             const selectedMonthStr = document.getElementById('monthSelector').value;
             const [y, m] = selectedMonthStr.split('-');
-            document.getElementById('settingsModalTitle').innerText = `${y}年${parseInt(m)}`;
+            const monthDisplay = `${y}年${parseInt(m)}月`;
+            document.getElementById('settingsModalMonthLabel').innerText = monthDisplay;
+            document.getElementById('settingsTargetMonthDisplay').innerText = monthDisplay;
+
             const activeSettings = getActiveSettings(selectedMonthStr);
             document.getElementById('settingTargetMin').value = activeSettings.targetMin;
             document.getElementById('settingTargetMax').value = activeSettings.targetMax;
+            
             document.querySelectorAll('input[name="deliveryDay"]').forEach(cb => {
                 cb.checked = activeSettings.deliveryDays.includes(parseInt(cb.value));
             });
+
+            renderHoseManagerList();
+            switchSettingsTab(initialTab);
             document.getElementById('settingsModal').classList.add('active');
         }
 
-        function closeSettings() { document.getElementById('settingsModal').classList.remove('active'); }
+        function closeSettings() { 
+            document.getElementById('settingsModal').classList.remove('active'); 
+        }
 
-        function saveSettings() {
+        function switchSettingsTab(tabName) {
+            currentSettingsTab = tabName;
+            const isTarget = tabName === 'target';
+            document.getElementById('tabContentTarget').classList.toggle('hidden', !isTarget);
+            document.getElementById('tabContentHoses').classList.toggle('hidden', isTarget);
+
+            const tabBtnTarget = document.getElementById('tabBtnTarget');
+            const tabBtnHoses = document.getElementById('tabBtnHoses');
+
+            if (isTarget) {
+                tabBtnTarget.className = "py-3 px-3 border-b-2 border-blue-600 text-blue-600 font-bold";
+                tabBtnHoses.className = "py-3 px-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium";
+            } else {
+                tabBtnTarget.className = "py-3 px-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium";
+                tabBtnHoses.className = "py-3 px-3 border-b-2 border-blue-600 text-blue-600 font-bold";
+            }
+        }
+
+        // Render Hose Management Cards in Settings Tab
+        function renderHoseManagerList() {
+            const container = document.getElementById('hoseManagerList');
+            container.innerHTML = '';
+
+            state.hoseTypes.forEach((h, index) => {
+                const card = document.createElement('div');
+                card.className = 'p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-500">ホース #${index + 1}</span>
+                        ${state.hoseTypes.length > 1 ? `
+                            <button onclick="removeHoseType('${h.id}')" class="text-xs text-red-500 hover:text-red-700 font-bold">削除</button>
+                        ` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-gray-600 mb-0.5">ホース名</label>
+                            <input type="text" id="m_name_${h.id}" value="${h.name}" class="w-full p-1.5 text-xs border border-gray-300 rounded font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-gray-600 mb-0.5">1本当たりの単価 (円)</label>
+                            <input type="number" step="0.1" min="0.1" id="m_price_${h.id}" value="${h.pricePerPiece}" class="w-full p-1.5 text-xs border border-gray-300 rounded font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-gray-600 mb-0.5">1束の本数 (本)</label>
+                            <input type="number" min="1" id="m_pieces_${h.id}" value="${h.bundlePieces}" class="w-full p-1.5 text-xs border border-gray-300 rounded font-medium">
+                        </div>
+                    </div>
+                    <div class="pt-1 flex items-center">
+                        <label class="flex items-center text-xs text-gray-700 cursor-pointer">
+                            <input type="radio" name="default45Choice" value="${h.id}" ${h.isDefault45 ? 'checked' : ''} class="mr-1.5 text-blue-600">
+                            このホースを【代案】（他が無い場合の代替ホース）の基準にする
+                        </label>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addNewHoseType() {
+            const newId = 'h_' + Date.now();
+            state.hoseTypes.push({
+                id: newId,
+                name: '新しいホース',
+                pricePerPiece: 5.0,
+                bundlePieces: 100,
+                isDefault45: false
+            });
+            renderHoseManagerList();
+        }
+
+        function removeHoseType(id) {
+            if (state.hoseTypes.length <= 1) {
+                alert('ホースは最低1種類必要です。');
+                return;
+            }
+            if (confirm('このホースを削除しますか？\n（過去の納品履歴の記録は保持されます）')) {
+                state.hoseTypes = state.hoseTypes.filter(h => h.id !== id);
+                // Ensure at least one is default45
+                if (!state.hoseTypes.some(h => h.isDefault45)) {
+                    state.hoseTypes[state.hoseTypes.length - 1].isDefault45 = true;
+                }
+                renderHoseManagerList();
+            }
+        }
+
+        function saveAllSettings() {
             const selectedMonthStr = document.getElementById('monthSelector').value;
+            
+            // 1. Save Target Settings for the specific month
             const tMin = parseInt(document.getElementById('settingTargetMin').value) || 35000;
             const tMax = parseInt(document.getElementById('settingTargetMax').value) || 40000;
-            const selectedDays = Array.from(document.querySelectorAll('input[name="deliveryDay"]:checked')).map(cb => parseInt(cb.value));
-            if (selectedDays.length === 0) { alert('納品する曜日を1つ以上選択してください。'); return; }
-            state.monthlySettings[selectedMonthStr] = { targetMin: tMin, targetMax: tMax, deliveryDays: selectedDays };
-            state.monthlySettings['default'] = state.monthlySettings[selectedMonthStr];
-            saveData(); updateUI(); closeSettings();
+            const selectedDays = Array.from(document.querySelectorAll('input[name="deliveryDay"]:checked'))
+                                      .map(cb => parseInt(cb.value));
+            
+            if (selectedDays.length === 0) { 
+                alert('納品する曜日を1つ以上選択してください。'); 
+                switchSettingsTab('target');
+                return; 
+            }
+
+            // Save exclusively to this month, and set as default for future months
+            state.monthlySettings[selectedMonthStr] = { 
+                targetMin: tMin, 
+                targetMax: tMax, 
+                deliveryDays: selectedDays 
+            };
+            state.monthlySettings['default'] = { 
+                targetMin: tMin, 
+                targetMax: tMax, 
+                deliveryDays: selectedDays 
+            };
+
+            // 2. Save Hose Types
+            const selectedDefault45Id = document.querySelector('input[name="default45Choice"]:checked')?.value;
+            
+            for (let i = 0; i < state.hoseTypes.length; i++) {
+                const h = state.hoseTypes[i];
+                const nameEl = document.getElementById(`m_name_${h.id}`);
+                const priceEl = document.getElementById(`m_price_${h.id}`);
+                const piecesEl = document.getElementById(`m_pieces_${h.id}`);
+                
+                if (nameEl) h.name = nameEl.value.trim() || '名称未設定';
+                if (priceEl) h.pricePerPiece = Math.max(0.1, parseFloat(priceEl.value) || 1);
+                if (piecesEl) h.bundlePieces = Math.max(1, parseInt(piecesEl.value) || 1);
+                h.isDefault45 = (h.id === selectedDefault45Id);
+            }
+
+            saveData();
+            renderHoseInputs();
+            updateUI();
+            closeSettings();
         }
 
         window.onload = init;
