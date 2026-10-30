@@ -50,31 +50,77 @@
 
     <!-- Dashboard Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <!-- Progress -->
-        <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between items-start mb-2">
-                    <h2 class="text-base font-semibold text-gray-700"><span id="titleMonthProgress">今月</span>の売上状況</h2>
-                    <button onclick="openSettings('target')" class="text-xs text-blue-600 hover:underline flex items-center gap-0.5">
-                        ✏️ 目標を変更
-                    </button>
+        <!-- Progress & Simulation Combined -->
+        <div class="space-y-4">
+            <!-- Current Month Progress -->
+            <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h2 class="text-base font-semibold text-gray-700"><span id="titleMonthProgress">今月</span>の売上実績</h2>
+                        <button onclick="openSettings('target')" class="text-xs text-blue-600 hover:underline flex items-center gap-0.5">
+                            ✏️ 目標を変更
+                        </button>
+                    </div>
+                    <div class="text-3xl md:text-4xl font-extrabold text-blue-600 tracking-tight mb-2">
+                        ¥<span id="displayTotal">0</span>
+                    </div>
+                    <div class="flex items-center text-xs sm:text-sm text-gray-500 mb-3 gap-2">
+                        <span>月間目標:</span>
+                        <span class="font-bold text-gray-700">¥<span id="displayTargetMin">35,000</span></span>
+                        <span>〜</span>
+                        <span class="font-bold text-gray-700">¥<span id="displayTargetMax">40,000</span></span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-3.5 mb-2 overflow-hidden p-0.5 border border-gray-200">
+                        <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
                 </div>
-                <div class="text-3xl md:text-4xl font-extrabold text-blue-600 tracking-tight mb-2">
-                    ¥<span id="displayTotal">0</span>
-                </div>
-                <div class="flex items-center text-xs sm:text-sm text-gray-500 mb-3 gap-2">
-                    <span>月間目標:</span>
-                    <span class="font-bold text-gray-700">¥<span id="displayTargetMin">35,000</span></span>
-                    <span>〜</span>
-                    <span class="font-bold text-gray-700">¥<span id="displayTargetMax">40,000</span></span>
-                </div>
-                <div class="w-full bg-gray-100 rounded-full h-3.5 mb-2 overflow-hidden p-0.5 border border-gray-200">
-                    <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                <div class="pt-2 border-t border-gray-100 flex justify-between items-center text-xs">
+                    <p id="remainingText" class="font-semibold text-red-500">目標まであと: ¥35,000</p>
+                    <span id="achievementRate" class="font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">達成率 0%</span>
                 </div>
             </div>
-            <div class="pt-2 border-t border-gray-100 flex justify-between items-center">
-                <p id="remainingText" class="text-sm font-semibold text-red-500">目標まであと: ¥35,000</p>
-                <span id="achievementRate" class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded">達成率 0%</span>
+
+            <!-- Plan Simulation & Advice Card (NEW) -->
+            <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/30">
+                <div class="flex justify-between items-center mb-2.5">
+                    <h3 class="text-sm font-bold text-indigo-950 flex items-center gap-1.5">
+                        <span>📊 納品予定シミュレーション</span>
+                    </h3>
+                    <button onclick="openBatchPlanModal()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-2.5 rounded shadow-xs flex items-center gap-1 transition-colors">
+                        📝 予定の一括設定
+                    </button>
+                </div>
+
+                <!-- Projection Bar & Amounts -->
+                <div class="grid grid-cols-3 gap-2 bg-white/80 p-2.5 rounded-lg border border-indigo-100 text-center mb-3">
+                    <div>
+                        <div class="text-[10px] text-gray-500">現在の実績</div>
+                        <div class="text-xs sm:text-sm font-bold text-gray-800">¥<span id="simActual">0</span></div>
+                    </div>
+                    <div class="border-x border-gray-200">
+                        <div class="text-[10px] text-indigo-600 font-semibold">＋ 今後の予定</div>
+                        <div class="text-xs sm:text-sm font-bold text-indigo-700">¥<span id="simPlanned">0</span></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-gray-500">＝ 着地見込み</div>
+                        <div class="text-sm sm:text-base font-extrabold text-blue-900">¥<span id="simProjected">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Simulation Status Badge -->
+                <div id="simStatusBadge" class="p-2.5 rounded-lg mb-3 text-xs flex items-center justify-between font-bold">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Intelligent Advice based ONLY on planned hoses -->
+                <div class="bg-white/90 p-3 rounded-lg border border-indigo-200/70 text-xs">
+                    <div class="font-bold text-indigo-900 mb-1 flex items-center gap-1">
+                        <span>💡 目標達成へのアドバイス:</span>
+                    </div>
+                    <div id="simAdviceText" class="text-gray-700 leading-relaxed space-y-1">
+                        予定を設定すると、その組み合わせだけを考慮したアドバイスが表示されます。
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -147,14 +193,17 @@
                     <span>📅 <span id="titleMonthCalendar">今月</span>の売上カレンダー</span>
                 </h2>
                 <p class="text-[11px] sm:text-xs text-gray-500">
-                    <span class="inline-block w-2.5 h-2.5 bg-blue-100 rounded-xs border border-blue-300 align-middle mr-0.5"></span>納品予定日には、上記で選択したホースの持ってくる束数が表示されます。
+                    日付をタップするとその日の予定（束・本数）を個別に編集できます。「一括設定」でまとめて登録も可能です。
                 </p>
             </div>
-            <div class="flex items-center gap-2 text-xs">
-                <span class="font-semibold bg-gray-50 border border-gray-200 px-2 py-0.5 rounded text-gray-600">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+                <button onclick="openBatchPlanModal()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-2.5 py-1 rounded shadow-2xs flex items-center gap-1 transition-colors">
+                    📝 予定を一括設定
+                </button>
+                <span class="font-semibold bg-gray-50 border border-gray-200 px-2 py-1 rounded text-gray-600">
                     納品実績: <b id="calendarDeliveredDaysCount" class="text-blue-600">0</b> 日
                 </span>
-                <span class="font-semibold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-amber-800">
+                <span class="font-semibold bg-amber-50 border border-amber-200 px-2 py-1 rounded text-amber-800">
                     残り納品日: <b id="calendarRemainingDaysCount" class="text-amber-600">0</b> 回
                 </span>
             </div>
@@ -367,6 +416,67 @@
         </div>
     </div>
 
+    <!-- Batch Plan Modal (NEW) -->
+    <div id="batchPlanModal" class="modal fixed inset-0 bg-black/60 items-center justify-center z-50 p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-5 border-b border-gray-200 flex justify-between items-center bg-indigo-50">
+                <div>
+                    <h2 class="text-lg font-bold text-indigo-950 flex items-center gap-1.5">
+                        <span>📝 納品予定の一括設定</span>
+                    </h2>
+                    <p class="text-xs text-indigo-700">複数の納品予定日に、持参する予定の束・本数をまとめて指定できます</p>
+                </div>
+                <button onclick="closeBatchPlanModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200">
+                    ✕
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4 text-sm flex-1">
+                <!-- Step 1: Select Dates -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="font-bold text-gray-800 text-xs">① 設定する納品日を選択（複数選択可）</label>
+                        <div class="flex gap-1.5 text-[11px]">
+                            <button type="button" onclick="batchSelectDates('future')" class="text-indigo-600 font-bold hover:underline">今後の予定日</button>
+                            <span class="text-gray-300">|</span>
+                            <button type="button" onclick="batchSelectDates('all')" class="text-indigo-600 font-bold hover:underline">全日程</button>
+                            <span class="text-gray-300">|</span>
+                            <button type="button" onclick="batchSelectDates('clear')" class="text-gray-500 hover:underline">全解除</button>
+                        </div>
+                    </div>
+                    <div id="batchPlanDatesList" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs">
+                        <!-- Dates Checkboxes dynamically rendered -->
+                    </div>
+                </div>
+
+                <!-- Step 2: Set Hoses & Restrictions -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="font-bold text-gray-800 text-xs">② 持ち帰り予定の指定 または 持ち帰り不可の設定</label>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mb-2">
+                        💡 <b>持ち帰り不可</b>にチェックすると、選択した日はそのホースが提案されなくなります。<br>
+                        💡 <b>束・本数</b>を指定すると確定予定となり、今後の他の日の提案量が自動で再調整されます。
+                    </p>
+                    <div id="batchHoseInputs" class="space-y-2">
+                        <!-- Dynamic hose inputs for batch -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-200 flex justify-end gap-2 bg-gray-50">
+                <button onclick="closeBatchPlanModal()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-100">
+                    キャンセル
+                </button>
+                <button onclick="saveBatchPlan()" class="px-5 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 shadow-sm">
+                    一括で予定を設定する
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Default Hose Master
         const DEFAULT_HOSE_TYPES = [
@@ -379,7 +489,9 @@
             monthlySettings: {}, 
             records: [],
             hoseTypes: JSON.parse(JSON.stringify(DEFAULT_HOSE_TYPES)),
-            selectedFilterHoseIds: [] // Currently filtered hose IDs for take-home prediction
+            selectedFilterHoseIds: [], // Currently filtered hose IDs for take-home prediction
+            plans: {}, // dateStr => { [hoseId]: { b, p } } Planned deliveries per date
+            daySettings: {} // dateStr => { disabledHoseIds: [], isPlanSet: boolean }
         };
 
         let lastCheckedMonth = "";
@@ -422,6 +534,10 @@
                         state.selectedFilterHoseIds = state.hoseTypes.map(h => h.id);
                     }
 
+                    // Plans & Day Settings
+                    state.plans = parsed.plans || {};
+                    state.daySettings = parsed.daySettings || {};
+
                     // Migrate old records to support dynamic hoses
                     migrateRecords();
                 } catch(e) {
@@ -431,6 +547,8 @@
                 state.monthlySettings = { 'default': { targetMin: 35000, targetMax: 40000, deliveryDays: [1, 4] } };
                 state.hoseTypes = JSON.parse(JSON.stringify(DEFAULT_HOSE_TYPES));
                 state.selectedFilterHoseIds = state.hoseTypes.map(h => h.id);
+                state.plans = {};
+                state.daySettings = {};
             }
 
             setDatesToToday();
@@ -805,12 +923,17 @@
             // Render Hose Filter Chips
             renderFilterHoseChips();
 
-            // Calculate Predictions & Take-home estimates first (so calendar can display them)
-            const estimatedTakeHome = updatePredictions(remaining, sumBundlesPerHose, selectedMonthStr, activeSettings);
-            lastEstimatedTakeHome = estimatedTakeHome;
+            // Calculate Dynamic Daily Schedule & Projections based on real deliveries, manual plans, and disabled hoses
+            const scheduleResult = calculateDynamicSchedule(selectedMonthStr, activeSettings, monthTotal, dailyTotals, currentRealDate);
 
-            // Render Calendar with the estimated take-home bundles
-            renderCalendar(selectedMonthStr, dailyTotals, activeSettings, currentRealDate, estimatedTakeHome);
+            // Update Prediction Text & Weekly Pace
+            updatePredictionsUI(scheduleResult, sumBundlesPerHose, selectedMonthStr, activeSettings);
+
+            // Render Simulation & Advice Card
+            renderSimulationAndAdvice(scheduleResult, selectedMonthStr, activeSettings, monthTotal);
+
+            // Render Calendar with the dynamic schedule
+            renderCalendar(selectedMonthStr, dailyTotals, activeSettings, currentRealDate, scheduleResult);
         }
 
         // Shorten hose name on narrow mobile screens (e.g., "8円ホース" -> "8円")
@@ -819,18 +942,239 @@
             return stripped || name;
         }
 
-        // Render Calendar Grid (iPhone 13 & Mobile Optimized)
-        function renderCalendar(monthStr, dailyTotals, activeSettings, todayStr, estimatedTakeHome) {
+        // Calculate total amount for a specific hose items set
+        function calcPlanAmount(items) {
+            if (!items) return 0;
+            let total = 0;
+            state.hoseTypes.forEach(h => {
+                const item = items[h.id] || { b: 0, p: 0 };
+                const bundlePrice = h.pricePerPiece * h.bundlePieces;
+                total += (item.b * bundlePrice) + (item.p * h.pricePerPiece);
+            });
+            return total;
+        }
+
+        // Core Dynamic Scheduling Engine
+        // - Accounts for actual deliveries and manual plans
+        // - Deducts fulfilled amounts to dynamically adjust future suggestions
+        // - Strictly excludes hoses marked as disabled for specific delivery days
+        function calculateDynamicSchedule(monthStr, activeSettings, monthActualTotal, dailyTotals, currentRealDate) {
+            const [year, month] = monthStr.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            const targetMin = activeSettings.targetMin;
+            const targetMax = activeSettings.targetMax;
+
+            const futureDates = [];
+            const manualPlanDates = [];
+            const unplannedDates = [];
+            let futureManualPlannedAmount = 0;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayOfWeek = new Date(year, month - 1, d).getDay();
+                const isScheduledDay = activeSettings.deliveryDays.includes(dayOfWeek);
+                const hasDelivered = dailyTotals[dateStr] !== undefined;
+                const isPast = dateStr < currentRealDate;
+
+                if (isScheduledDay && !hasDelivered && !isPast) {
+                    futureDates.push(dateStr);
+                    const daySetting = state.daySettings[dateStr];
+                    const plan = state.plans[dateStr];
+                    const isManualSet = daySetting && daySetting.isPlanSet && plan;
+
+                    if (isManualSet) {
+                        manualPlanDates.push(dateStr);
+                        futureManualPlannedAmount += calcPlanAmount(plan);
+                    } else {
+                        unplannedDates.push(dateStr);
+                    }
+                }
+            }
+
+            // Remaining amount needed to fulfill minimum target
+            const alreadyCountedAmount = monthActualTotal + futureManualPlannedAmount;
+            const remainingNeeded = Math.max(0, targetMin - alreadyCountedAmount);
+
+            // Per-day dynamic suggestions for unplanned dates
+            const dailySuggestions = {}; // dateStr => { details: [], totalBundles, totalPcs, totalAmount }
+            const unallocatedDaysCount = unplannedDates.length;
+
+            if (unallocatedDaysCount > 0) {
+                const targetPerDay = remainingNeeded / unallocatedDaysCount;
+
+                unplannedDates.forEach(dateStr => {
+                    const disabledHoses = (state.daySettings[dateStr] && state.daySettings[dateStr].disabledHoseIds) || [];
+                    
+                    // Available hoses for this specific day: filtered by global filter AND not disabled for this day
+                    let usableHoses = state.hoseTypes.filter(h => 
+                        state.selectedFilterHoseIds.includes(h.id) && !disabledHoses.includes(h.id)
+                    );
+
+                    // Fallback if all filtered hoses are disabled for this day
+                    if (usableHoses.length === 0) {
+                        usableHoses = state.hoseTypes.filter(h => !disabledHoses.includes(h.id));
+                    }
+                    if (usableHoses.length === 0) {
+                        usableHoses = state.hoseTypes; // absolute fallback
+                    }
+
+                    // Ratio calculation using base weights
+                    let smoothedTotal = 0;
+                    const ratios = {};
+                    usableHoses.forEach(h => {
+                        const weight = (h.isDefault45 || h.pricePerPiece <= 5) ? 3 : 2;
+                        ratios[h.id] = weight;
+                        smoothedTotal += weight;
+                    });
+
+                    let avgBundlePrice = 0;
+                    usableHoses.forEach(h => {
+                        const ratio = ratios[h.id] / smoothedTotal;
+                        ratios[h.id] = ratio;
+                        avgBundlePrice += ratio * (h.pricePerPiece * h.bundlePieces);
+                    });
+
+                    const totalBundlesNeeded = Math.ceil(targetPerDay / (avgBundlePrice || 400));
+                    const details = [];
+                    let totalBundles = 0;
+                    let totalPcs = 0;
+
+                    usableHoses.forEach(h => {
+                        const ratio = ratios[h.id];
+                        const estTakehome = usableHoses.length === 1 ? totalBundlesNeeded : Math.round(totalBundlesNeeded * ratio);
+                        const pcs = estTakehome * h.bundlePieces;
+                        totalBundles += estTakehome;
+                        totalPcs += pcs;
+
+                        details.push({
+                            id: h.id,
+                            name: h.name,
+                            shortName: getShortHoseName(h.name),
+                            bundles: estTakehome,
+                            pieces: pcs,
+                            pricePerPiece: h.pricePerPiece
+                        });
+                    });
+
+                    dailySuggestions[dateStr] = {
+                        details: details,
+                        totalBundles: totalBundles,
+                        totalPcs: totalPcs,
+                        targetAmount: targetPerDay
+                    };
+                });
+            }
+
+            return {
+                futureDates,
+                manualPlanDates,
+                unplannedDates,
+                futureManualPlannedAmount,
+                alreadyCountedAmount,
+                remainingNeeded,
+                dailySuggestions,
+                targetMin,
+                targetMax,
+                isAllUnplanned: (manualPlanDates.length === 0)
+            };
+        }
+
+        // Render Simulation & Intelligent Advice
+        function renderSimulationAndAdvice(schedule, monthStr, activeSettings, monthActualTotal) {
+            const projectedTotal = schedule.alreadyCountedAmount;
+            const diffMin = projectedTotal - schedule.targetMin;
+
+            document.getElementById('simActual').innerText = monthActualTotal.toLocaleString();
+            document.getElementById('simPlanned').innerText = schedule.futureManualPlannedAmount.toLocaleString();
+            document.getElementById('simProjected').innerText = projectedTotal.toLocaleString();
+
+            const statusBadge = document.getElementById('simStatusBadge');
+            const adviceText = document.getElementById('simAdviceText');
+
+            if (diffMin >= 0) {
+                statusBadge.className = 'p-2.5 rounded-lg mb-3 text-xs flex items-center justify-between font-bold bg-emerald-100 text-emerald-950 border border-emerald-300';
+                statusBadge.innerHTML = `
+                    <span class="flex items-center gap-1">🎉 <b>確定分で目標達成見込み！</b></span>
+                    <span>最低目標を +¥${diffMin.toLocaleString()} 超過</span>
+                `;
+
+                const diffMax = schedule.targetMax - projectedTotal;
+                let maxNote = diffMax > 0 
+                    ? `<p class="mt-1 text-gray-600 text-[11px]">※上限（¥${schedule.targetMax.toLocaleString()}）まではあと ¥${diffMax.toLocaleString()} です。</p>`
+                    : `<p class="mt-1 text-emerald-700 font-bold text-[11px]">上限目標も達成見込みです！</p>`;
+
+                adviceText.innerHTML = `
+                    <p class="text-emerald-800 font-bold">入力済みの予定と納品実績で、月間目標（¥${schedule.targetMin.toLocaleString()}）を達成できます！</p>
+                    ${maxNote}
+                    <p class="text-[11px] text-gray-500 mt-1">未定の納品日は無理に納品しなくても目標をクリアできます。</p>
+                `;
+            } else {
+                const shortage = Math.abs(diffMin);
+                statusBadge.className = 'p-2.5 rounded-lg mb-3 text-xs flex items-center justify-between font-bold bg-rose-100 text-rose-950 border border-rose-300';
+                statusBadge.innerHTML = `
+                    <span class="flex items-center gap-1">⚠️ <b>目標まで不足</b></span>
+                    <span>あと ¥${shortage.toLocaleString()} 不足見込み</span>
+                `;
+
+                if (schedule.futureDates.length === 0) {
+                    adviceText.innerHTML = `<p class="text-gray-500">今月の残りの納品日はありません。</p>`;
+                    return;
+                }
+
+                // Collect hoses that are NOT disabled in future dates
+                const usableHoseMap = {};
+                schedule.futureDates.forEach(dateStr => {
+                    const disabled = (state.daySettings[dateStr] && state.daySettings[dateStr].disabledHoseIds) || [];
+                    state.hoseTypes.forEach(h => {
+                        if (!disabled.includes(h.id) && state.selectedFilterHoseIds.includes(h.id)) {
+                            usableHoseMap[h.id] = h;
+                        }
+                    });
+                });
+                const eligibleHoses = Object.values(usableHoseMap);
+
+                if (eligibleHoses.length === 0) {
+                    adviceText.innerHTML = `<p class="text-amber-800 font-bold">今後の納品日で持ち帰り可能なホースが指定されていません。</p>`;
+                    return;
+                }
+
+                const remainingDays = schedule.futureDates.length;
+                const adviceLines = [];
+
+                eligibleHoses.forEach(h => {
+                    const bPrice = h.pricePerPiece * h.bundlePieces;
+                    const neededTotal = Math.ceil(shortage / bPrice);
+                    const perDay = Math.ceil(neededTotal / remainingDays);
+                    adviceLines.push(`
+                        <div class="bg-indigo-50/70 p-2 rounded border border-indigo-100 text-[11px]">
+                            <b>・${h.name} で不足を補う場合:</b> 残り ${remainingDays} 回の納品で、1回あたり <b class="text-indigo-700">＋${perDay} 束</b>（合計 <b>${neededTotal} 束</b>）持っていくと達成できます。
+                        </div>
+                    `);
+                });
+
+                adviceText.innerHTML = `
+                    <p class="text-gray-700 mb-1.5 text-[11px]">
+                        ※持ち帰り不可に設定されたホースは除外されています。<b>今後の納品日で持ち帰り可能なホース（${eligibleHoses.map(h => h.name).join(', ')}）のみ</b>による提案です：
+                    </p>
+                    <div class="space-y-1">
+                        ${adviceLines.join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // Render Calendar Grid (Interactive Schedule: Manual Plans & Dynamic Suggestions with Disabled Hoses)
+        function renderCalendar(monthStr, dailyTotals, activeSettings, todayStr, schedule) {
             const [year, month] = monthStr.split('-').map(Number);
             const firstDayIndex = new Date(year, month - 1, 1).getDay();
             const daysInMonth = new Date(year, month, 0).getDate();
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
 
-            // Delivered days count
             const deliveredDaysCount = Object.keys(dailyTotals).length;
             document.getElementById('calendarDeliveredDaysCount').innerText = deliveredDaysCount;
-            document.getElementById('calendarRemainingDaysCount').innerText = estimatedTakeHome ? estimatedTakeHome.deliveryDaysLeft : 0;
+            document.getElementById('calendarRemainingDaysCount').innerText = schedule.futureDates.length;
 
             // Empty cells before month starts
             for (let i = 0; i < firstDayIndex; i++) {
@@ -853,9 +1197,8 @@
                 let cellBg = isScheduledDay ? 'bg-blue-50/40 hover:bg-blue-100/60' : 'bg-white hover:bg-gray-50';
                 if (isToday) cellBg += ' ring-2 ring-blue-500 ring-inset bg-blue-50/80';
 
-                // Optimized padding and text sizes for iPhone 13 (390px viewport width)
                 cell.className = `calendar-cell p-0.5 sm:p-1.5 flex flex-col justify-between cursor-pointer transition-all relative border-gray-100 select-none ${cellBg}`;
-                cell.onclick = () => onCalendarDateClick(dateStr, isScheduledDay, dailyEarned, isPast);
+                cell.onclick = () => onCalendarDateClick(dateStr, isScheduledDay, dailyEarned, isPast, schedule);
 
                 let dayColor = 'text-gray-700';
                 if (dayOfWeek === 0) dayColor = 'text-red-500';
@@ -863,38 +1206,80 @@
 
                 let badgeHtml = '';
                 if (dailyEarned !== undefined) {
-                    // Actual Earned Badge: Optimized for narrow screens without clipping
+                    // Actual Earned Badge
                     badgeHtml = `
                         <div class="mt-0.5 bg-emerald-600 text-white font-extrabold text-[8.5px] sm:text-[11px] py-0.5 px-0.5 rounded shadow-2xs text-center leading-tight tracking-tighter break-all" title="売上: ¥${dailyEarned.toLocaleString()}">
                             ¥${dailyEarned.toLocaleString()}
                         </div>
                     `;
-                } else if (isScheduledDay) {
-                    // Scheduled Delivery Day Badges: Per-hose breakdown (e.g. "8円ホース 2束")
-                    const activeItems = (estimatedTakeHome && estimatedTakeHome.details)
-                        ? estimatedTakeHome.details.filter(item => item.bundles > 0)
-                        : [];
-                    if (estimatedTakeHome && estimatedTakeHome.deliveryDaysLeft > 0 && !isPast && activeItems.length > 0) {
-                        const itemsHtml = activeItems.map(item => {
-                            const shortName = getShortHoseName(item.name);
+                } else if (isScheduledDay && !isPast) {
+                    const daySetting = state.daySettings[dateStr];
+                    const isManual = daySetting && daySetting.isPlanSet && state.plans[dateStr];
+                    const manualPlan = state.plans[dateStr];
+                    const dynamicSug = schedule.dailySuggestions[dateStr];
+
+                    let itemsToRender = [];
+
+                    if (isManual) {
+                        // User manual plan items
+                        state.hoseTypes.forEach(h => {
+                            const item = manualPlan[h.id];
+                            if (item && (item.b > 0 || item.p > 0)) {
+                                itemsToRender.push({
+                                    name: h.name,
+                                    shortName: getShortHoseName(h.name),
+                                    bundles: item.b,
+                                    pieces: item.p,
+                                    isManual: true
+                                });
+                            }
+                        });
+                    } else if (dynamicSug && dynamicSug.details) {
+                        // Dynamic suggested items
+                        dynamicSug.details.filter(it => it.bundles > 0).forEach(it => {
+                            itemsToRender.push({
+                                name: it.name,
+                                shortName: it.shortName,
+                                bundles: it.bundles,
+                                pieces: it.pieces,
+                                isManual: false
+                            });
+                        });
+                    }
+
+                    if (itemsToRender.length > 0) {
+                        const itemsHtml = itemsToRender.map(item => {
+                            const badgeStyle = item.isManual
+                                ? 'bg-indigo-100/90 hover:bg-indigo-200 border-indigo-300 text-indigo-950'
+                                : 'bg-amber-100/90 hover:bg-amber-200 border-amber-300 text-amber-950';
+                            const numColor = item.isManual ? 'text-indigo-700' : 'text-amber-700';
+
+                            let qtyText = `${item.bundles}束`;
+                            if (item.pieces > 0 && item.isManual) {
+                                qtyText = item.bundles > 0 ? `${item.bundles}束+${item.pieces}本` : `${item.pieces}本`;
+                            }
+
                             return `
-                                <div class="bg-amber-100/90 hover:bg-amber-200 border border-amber-300 text-amber-950 rounded px-0.5 sm:px-1 py-0.5 flex items-center justify-between gap-0.5 leading-tight transition-colors">
+                                <div class="${badgeStyle} border rounded px-0.5 sm:px-1 py-0.5 flex items-center justify-between gap-0.5 leading-tight transition-colors">
                                     <span class="text-[8px] sm:text-[9.5px] md:text-[10px] font-bold tracking-tighter break-all">
-                                        <span class="sm:hidden">${shortName}</span>
+                                        <span class="sm:hidden">${item.shortName}</span>
                                         <span class="hidden sm:inline">${item.name}</span>
                                     </span>
-                                    <span class="text-[8.5px] sm:text-[10px] font-black text-amber-700 tracking-tighter whitespace-nowrap">${item.bundles}束</span>
+                                    <span class="text-[8.5px] sm:text-[10px] font-black ${numColor} tracking-tighter whitespace-nowrap">${qtyText}</span>
                                 </div>
                             `;
                         }).join('');
-                        badgeHtml = `<div class="mt-1 flex flex-col gap-0.5">${itemsHtml}</div>`;
+
+                        const labelPrefix = isManual 
+                            ? '<span class="text-[7.5px] text-indigo-600 font-extrabold block text-right leading-none">予定</span>' 
+                            : '<span class="text-[7.5px] text-amber-700 font-extrabold block text-right leading-none">提案</span>';
+
+                        badgeHtml = `<div class="mt-0.5 flex flex-col gap-0.5">${labelPrefix}${itemsHtml}</div>`;
                     } else {
-                        badgeHtml = `
-                            <div class="mt-0.5 text-[8px] sm:text-[10px] text-blue-500/80 font-medium text-center leading-none">
-                                納品日
-                            </div>
-                        `;
+                        badgeHtml = `<div class="mt-0.5 text-[8px] text-blue-500/80 font-medium text-center leading-none">納品日</div>`;
                     }
+                } else if (isScheduledDay && isPast) {
+                    badgeHtml = `<div class="mt-0.5 text-[8px] text-gray-400 font-medium text-center leading-none">納品日</div>`;
                 }
 
                 cell.innerHTML = `
@@ -909,8 +1294,106 @@
             }
         }
 
+        // Update Prediction Text & Weekly Pace based on dynamic schedule
+        function updatePredictionsUI(schedule, sumBundlesPerHose, selectedMonthStr, activeSettings) {
+            const paceNormal = document.getElementById('paceNormal');
+            const takeHomeSuggest = document.getElementById('takeHomeSuggest');
+            const totalRemainingOnly45 = document.getElementById('totalRemainingOnly45');
+            const filterLabel = document.getElementById('takeHomeFilterLabel');
+            const totalBundlesBadge = document.getElementById('takeHomeTotalBundlesBadge');
+
+            const hose45 = state.hoseTypes.find(h => h.isDefault45) || 
+                          state.hoseTypes.find(h => h.pricePerPiece === 4.5) || 
+                          state.hoseTypes[state.hoseTypes.length - 1];
+            const bundlePrice45 = hose45 ? (hose45.pricePerPiece * hose45.bundlePieces) : 360;
+            const pcsPerBundle45 = hose45 ? hose45.bundlePieces : 80;
+
+            const remaining = schedule.remainingNeeded;
+
+            if (remaining === 0) {
+                paceNormal.innerText = "確定分の納品で目標達成見込みのため、追加の納品は不要です。";
+                takeHomeSuggest.innerHTML = "<span class='font-bold text-green-600'>🎉 今月の目標は達成済み（または予定でクリア）です！</span>";
+                totalBundlesBadge.innerText = "クリア見込み";
+                totalRemainingOnly45.innerHTML = "<span class='font-bold text-green-600'>🎉 達成見込みです！</span>";
+                return;
+            }
+
+            // Total only 4.5 Calculation
+            const totalBundlesNeededOnly45 = Math.ceil(remaining / bundlePrice45);
+            const totalPcsOnly45 = totalBundlesNeededOnly45 * pcsPerBundle45;
+            totalRemainingOnly45.innerHTML = `
+                <div class="mb-1 text-gray-500 text-xs">目標達成まで、あと合計で：</div>
+                <div><b>${hose45.name}： <span class="text-base sm:text-xl text-red-600 font-bold">${totalBundlesNeededOnly45.toLocaleString()}</span> 束</b> <span class="text-xs text-red-800">（約 ${totalPcsOnly45.toLocaleString()} 本）</span></div>
+            `;
+
+            // Display suggestion for the NEXT upcoming delivery date
+            const nextDeliveryDate = schedule.futureDates[0];
+
+            if (!nextDeliveryDate) {
+                paceNormal.innerHTML = `今月の納品日はすべて終了しています。<br>（不足金額: ¥${remaining.toLocaleString()}）`;
+                takeHomeSuggest.innerHTML = `<span class='text-gray-500'>納品予定日は終了しています。</span>`;
+                totalBundlesBadge.innerText = "-";
+                return;
+            }
+
+            // Next day's suggestion or manual plan
+            const isNextManual = state.daySettings[nextDeliveryDate]?.isPlanSet && state.plans[nextDeliveryDate];
+            let nextDetails = [];
+            let nextTotalBundles = 0;
+            let nextTotalPcs = 0;
+
+            if (isNextManual) {
+                state.hoseTypes.forEach(h => {
+                    const item = state.plans[nextDeliveryDate][h.id];
+                    if (item && (item.b > 0 || item.p > 0)) {
+                        nextDetails.push({ name: h.name, bundles: item.b, pcs: item.p });
+                        nextTotalBundles += item.b;
+                        nextTotalPcs += item.p;
+                    }
+                });
+                filterLabel.innerText = `【次回 ${nextDeliveryDate}】確定予定`;
+            } else if (schedule.dailySuggestions[nextDeliveryDate]) {
+                const sug = schedule.dailySuggestions[nextDeliveryDate];
+                nextDetails = sug.details.map(d => ({ name: d.name, bundles: d.bundles, pcs: d.pieces }));
+                nextTotalBundles = sug.totalBundles;
+                nextTotalPcs = sug.totalPcs;
+                filterLabel.innerText = `【次回 ${nextDeliveryDate}】提案ペース`;
+            }
+
+            if (nextDetails.length > 0) {
+                let suggestHtml = '';
+                nextDetails.forEach(d => {
+                    suggestHtml += `
+                        <div class="flex items-center justify-between py-1 border-b border-green-50 last:border-none">
+                            <div>
+                                <b>${d.name}</b>: 
+                                <span class="text-base font-extrabold text-gray-900">${d.bundles}</span> 束
+                            </div>
+                            <span class="text-xs text-green-800 font-medium">（約 ${d.pcs.toLocaleString()} 本）</span>
+                        </div>
+                    `;
+                });
+                takeHomeSuggest.innerHTML = suggestHtml;
+                totalBundlesBadge.innerText = `計 ${nextTotalBundles} 束`;
+            } else {
+                takeHomeSuggest.innerHTML = `<span class='text-gray-500'>持参予定は設定されていません。</span>`;
+                totalBundlesBadge.innerText = "0束";
+            }
+
+            // Weekly Pace across remaining dates
+            const deliveriesPerWeek = Math.max(1, activeSettings.deliveryDays.length);
+            const remainingDeliveries = schedule.futureDates.length;
+            const avgPerDelivery = remaining / (remainingDeliveries || 1);
+            const weeklyAmount = avgPerDelivery * deliveriesPerWeek;
+
+            paceNormal.innerHTML = `
+                今月の納品予定日は残り <b>${remainingDeliveries}回</b> です。<br>
+                1回あたりおよそ <b>¥${Math.round(avgPerDelivery).toLocaleString()}</b>、1週間あたり <b>¥${Math.round(weeklyAmount).toLocaleString()}</b> のペースで目標に到達します。
+            `;
+        }
+
         // Show detailed card when user taps a calendar date
-        function onCalendarDateClick(dateStr, isScheduledDay, dailyEarned, isPast) {
+        function onCalendarDateClick(dateStr, isScheduledDay, dailyEarned, isPast, schedule) {
             selectCalendarDate(dateStr);
             const detailContainer = document.getElementById('calendarDayDetail');
             if (!detailContainer) return;
@@ -930,7 +1413,7 @@
                 </div>
             `;
 
-            // If day has recorded sales
+            // If day has recorded actual sales
             if (dailyEarned !== undefined) {
                 const dayRecords = state.records.filter(r => r.date === dateStr);
                 contentHtml += `
@@ -956,27 +1439,97 @@
                     contentHtml += `<div class="text-[11px] text-gray-600 bg-white p-1.5 rounded border border-gray-200">${parts.join(' / ')} ➔ <b>¥${r.total.toLocaleString()}</b></div>`;
                 });
                 contentHtml += `</div></div>`;
-            } else if (isScheduledDay && lastEstimatedTakeHome && lastEstimatedTakeHome.totalBundles > 0 && !isPast) {
-                // Scheduled delivery day with customized hose combination
+            } else if (isScheduledDay && !isPast) {
+                // Scheduled delivery day settings
+                const daySetting = state.daySettings[dateStr] || { disabledHoseIds: [], isPlanSet: false };
+                const disabledHoses = daySetting.disabledHoseIds || [];
+                const currentPlan = state.plans[dateStr] || {};
+                const isManual = daySetting.isPlanSet && !!state.plans[dateStr];
+
                 contentHtml += `
-                    <div class="mb-2">
-                        <div class="text-xs font-bold text-amber-900 mb-1 flex items-center justify-between">
-                            <span>📦 選択した組み合わせでの持参目安:</span>
-                            <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-black text-xs">合計 ${lastEstimatedTakeHome.totalBundles} 束 (約 ${lastEstimatedTakeHome.totalPcs.toLocaleString()} 本)</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-amber-50/70 p-2 rounded border border-amber-200 text-[11px]">
+                    <div class="mb-3 space-y-3">
+                        <!-- 1. Disabled Hoses for this day (User requested feature) -->
+                        <div class="bg-amber-50/70 p-2.5 rounded-lg border border-amber-200">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold text-amber-950 flex items-center gap-1">
+                                    <span>🚫 この日持って帰れないホースを指定</span>
+                                </span>
+                                <span class="text-[10px] text-amber-800">タップで除外 / 解除</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mb-2">赤色（除外中）にしたホースは、この日の提案から完全に排除されます。</p>
+                            <div class="flex flex-wrap gap-1.5">
                 `;
-                lastEstimatedTakeHome.details.forEach(item => {
+
+                state.hoseTypes.forEach(h => {
+                    const isDisabled = disabledHoses.includes(h.id);
+                    if (isDisabled) {
+                        contentHtml += `
+                            <button type="button" onclick="toggleDayDisabledHose('${dateStr}', '${h.id}')" class="py-1 px-2.5 rounded-full text-xs font-bold bg-rose-600 text-white border border-rose-700 shadow-2xs flex items-center gap-1 active:scale-95">
+                                <span>✕</span> <span>${h.name} (持ち帰り不可)</span>
+                            </button>
+                        `;
+                    } else {
+                        contentHtml += `
+                            <button type="button" onclick="toggleDayDisabledHose('${dateStr}', '${h.id}')" class="py-1 px-2.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center gap-1 active:scale-95">
+                                <span class="text-emerald-500">✔</span> <span>${h.name} (持ち帰り可)</span>
+                            </button>
+                        `;
+                    }
+                });
+
+                contentHtml += `
+                            </div>
+                        </div>
+
+                        <!-- 2. Manual Plan Setting vs Dynamic Suggestion -->
+                        <div class="bg-indigo-50/60 p-3 rounded-lg border border-indigo-200">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <span class="text-xs font-bold text-indigo-950 flex items-center gap-1">
+                                    <span>✍️ この日の予定を自分で指定する（確定モード）</span>
+                                    ${isManual ? '<span class="text-[9px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-bold">確定中</span>' : '<span class="text-[9px] bg-amber-100 text-amber-800 border border-amber-200 px-1.5 py-0.2 rounded font-bold">自動提案中</span>'}
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mb-2">束・本数を入力して保存すると確定予定となり、<b>他の日の提案量が自動で再計算</b>されます。</p>
+
+                            <div class="space-y-1.5 mb-2.5">
+                `;
+
+                state.hoseTypes.forEach(h => {
+                    const isDisabled = disabledHoses.includes(h.id);
+                    const item = currentPlan[h.id] || { b: 0, p: 0 };
                     contentHtml += `
-                        <div class="flex justify-between items-center bg-white px-2 py-1 rounded border border-amber-100">
-                            <span class="font-bold text-gray-800">${item.name}:</span>
-                            <span><b>${item.bundles} 束</b> <span class="text-gray-500">（約 ${item.pcs}本）</span></span>
+                        <div class="flex items-center justify-between gap-2 p-1.5 rounded border text-[11px] ${isDisabled ? 'bg-gray-100/80 border-gray-200 opacity-60' : 'bg-white border-indigo-100'}">
+                            <div class="flex items-center gap-1">
+                                <span class="font-bold text-gray-800">${h.name}</span>
+                                ${isDisabled ? '<span class="text-[9px] text-red-500 font-bold">(除外設定中)</span>' : ''}
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <div class="flex items-center border border-gray-300 rounded px-1.5 py-0.5 bg-white">
+                                    <input type="number" min="0" value="${item.b}" id="day_plan_b_${h.id}" class="w-12 text-center outline-none font-bold text-xs" ${isDisabled ? 'disabled' : ''}>
+                                    <span class="text-gray-400 text-[10px] ml-0.5">束</span>
+                                </div>
+                                <div class="flex items-center border border-gray-300 rounded px-1.5 py-0.5 bg-white">
+                                    <input type="number" min="0" value="${item.p}" id="day_plan_p_${h.id}" class="w-12 text-center outline-none font-bold text-xs" ${isDisabled ? 'disabled' : ''}>
+                                    <span class="text-gray-400 text-[10px] ml-0.5">本</span>
+                                </div>
+                            </div>
                         </div>
                     `;
                 });
+
                 contentHtml += `
+                            </div>
+                            <div class="flex justify-end gap-2 pt-1 border-t border-indigo-100">
+                                ${isManual ? `
+                                    <button onclick="clearDayPlan('${dateStr}')" class="text-[11px] text-gray-600 hover:text-red-600 hover:underline px-2 py-1">
+                                        🔄 自動提案に戻す
+                                    </button>
+                                ` : ''}
+                                <button onclick="saveDayPlan('${dateStr}')" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded shadow-xs">
+                                    💾 この日の予定を確定保存
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-[10px] text-gray-500 mt-1">※上部の「持ってくるホースを選択」の組み合わせと連動しています。</p>
                     </div>
                 `;
             } else {
@@ -993,6 +1546,214 @@
 
             detailContainer.innerHTML = contentHtml;
             detailContainer.classList.remove('hidden');
+        }
+
+        // Toggle disabled hose for a specific date
+        function toggleDayDisabledHose(dateStr, hoseId) {
+            if (!state.daySettings[dateStr]) {
+                state.daySettings[dateStr] = { disabledHoseIds: [], isPlanSet: false };
+            }
+            const disabled = state.daySettings[dateStr].disabledHoseIds || [];
+            const idx = disabled.indexOf(hoseId);
+            if (idx > -1) {
+                disabled.splice(idx, 1);
+            } else {
+                disabled.push(hoseId);
+            }
+            state.daySettings[dateStr].disabledHoseIds = disabled;
+
+            saveData();
+            updateUI();
+            
+            // Re-render date detail card
+            const isPast = dateStr < (new Date(Date.now() - (new Date().getTimezoneOffset()*60000))).toISOString().substring(0, 10);
+            onCalendarDateClick(dateStr, true, undefined, isPast);
+        }
+
+        // Save Day Plan (Manual Confirmation)
+        function saveDayPlan(dateStr) {
+            if (!state.daySettings[dateStr]) {
+                state.daySettings[dateStr] = { disabledHoseIds: [], isPlanSet: false };
+            }
+
+            const planItems = {};
+            let hasAny = false;
+            state.hoseTypes.forEach(h => {
+                const bEl = document.getElementById(`day_plan_b_${h.id}`);
+                const pEl = document.getElementById(`day_plan_p_${h.id}`);
+                const b = bEl ? Math.max(0, parseInt(bEl.value) || 0) : 0;
+                const p = pEl ? Math.max(0, parseInt(pEl.value) || 0) : 0;
+                if (b > 0 || p > 0) hasAny = true;
+                planItems[h.id] = { b, p };
+            });
+
+            if (hasAny) {
+                state.plans[dateStr] = planItems;
+                state.daySettings[dateStr].isPlanSet = true;
+            } else {
+                delete state.plans[dateStr];
+                state.daySettings[dateStr].isPlanSet = false;
+            }
+
+            saveData();
+            updateUI();
+            const isPast = dateStr < (new Date(Date.now() - (new Date().getTimezoneOffset()*60000))).toISOString().substring(0, 10);
+            onCalendarDateClick(dateStr, true, undefined, isPast);
+        }
+
+        // Clear Day Plan (Return to Dynamic Suggestion)
+        function clearDayPlan(dateStr) {
+            delete state.plans[dateStr];
+            if (state.daySettings[dateStr]) {
+                state.daySettings[dateStr].isPlanSet = false;
+            }
+            saveData();
+            updateUI();
+            const isPast = dateStr < (new Date(Date.now() - (new Date().getTimezoneOffset()*60000))).toISOString().substring(0, 10);
+            onCalendarDateClick(dateStr, true, undefined, isPast);
+        }
+
+        // Batch Plan Modal Functions
+        function openBatchPlanModal() {
+            const selectedMonthStr = document.getElementById('monthSelector').value;
+            const activeSettings = getActiveSettings(selectedMonthStr);
+            const [year, month] = selectedMonthStr.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const today = new Date();
+            const todayStr = (new Date(today - (today.getTimezoneOffset() * 60000))).toISOString().substring(0, 10);
+
+            // 1. Dates List
+            const datesContainer = document.getElementById('batchPlanDatesList');
+            datesContainer.innerHTML = '';
+            const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+
+            let hasAnyDates = false;
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayOfWeek = new Date(year, month - 1, d).getDay();
+                if (activeSettings.deliveryDays.includes(dayOfWeek)) {
+                    hasAnyDates = true;
+                    const isFutureOrToday = dateStr >= todayStr;
+                    const isChecked = isFutureOrToday;
+                    const daySetting = state.daySettings[dateStr];
+                    const isManual = daySetting && daySetting.isPlanSet;
+                    const label = document.createElement('label');
+                    label.className = `flex items-center gap-1.5 p-1 rounded border cursor-pointer ${isFutureOrToday ? 'bg-white border-gray-200' : 'bg-gray-100 border-gray-200 text-gray-400'}`;
+                    label.innerHTML = `
+                        <input type="checkbox" name="batchDateChoice" value="${dateStr}" ${isChecked ? 'checked' : ''} class="w-3.5 h-3.5 text-indigo-600 rounded">
+                        <span><b>${parseInt(month)}/${d}</b>(${dayNames[dayOfWeek]})</span>
+                        ${isManual ? '<span class="text-[9px] text-indigo-600 font-bold ml-auto">予定有</span>' : ''}
+                    `;
+                    datesContainer.appendChild(label);
+                }
+            }
+
+            if (!hasAnyDates) {
+                datesContainer.innerHTML = `<div class="text-xs text-gray-400 p-2 col-span-3">この月には納品曜日がありません。設定から納品曜日を指定してください。</div>`;
+            }
+
+            // 2. Hose Inputs with Disabled checkboxes
+            const hoseInputsContainer = document.getElementById('batchHoseInputs');
+            hoseInputsContainer.innerHTML = '';
+
+            state.hoseTypes.forEach(h => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-xs space-y-1.5';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-800">${h.name}</span>
+                        <label class="flex items-center gap-1 text-[11px] text-rose-700 font-bold cursor-pointer">
+                            <input type="checkbox" id="batch_disable_${h.id}" class="text-rose-600 rounded">
+                            このホースを持ち帰り不可にする
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-gray-600">
+                        <span>予定数量を指定する場合:</span>
+                        <div class="flex items-center gap-1">
+                            <div class="flex items-center bg-white border border-gray-300 rounded px-1.5 py-0.5">
+                                <input type="number" min="0" value="0" id="batch_b_${h.id}" class="w-12 text-center outline-none font-bold text-xs">
+                                <span class="text-gray-400 text-[10px] ml-0.5 font-medium">束</span>
+                            </div>
+                            <div class="flex items-center bg-white border border-gray-300 rounded px-1.5 py-0.5">
+                                <input type="number" min="0" value="0" id="batch_p_${h.id}" class="w-12 text-center outline-none font-bold text-xs">
+                                <span class="text-gray-400 text-[10px] ml-0.5 font-medium">本</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                hoseInputsContainer.appendChild(div);
+            });
+
+            document.getElementById('batchPlanModal').classList.add('active');
+        }
+
+        function closeBatchPlanModal() {
+            document.getElementById('batchPlanModal').classList.remove('active');
+        }
+
+        function batchSelectDates(type) {
+            const today = new Date();
+            const todayStr = (new Date(today - (today.getTimezoneOffset() * 60000))).toISOString().substring(0, 10);
+            const checkboxes = document.querySelectorAll('input[name="batchDateChoice"]');
+            
+            checkboxes.forEach(cb => {
+                if (type === 'all') {
+                    cb.checked = true;
+                } else if (type === 'clear') {
+                    cb.checked = false;
+                } else if (type === 'future') {
+                    cb.checked = cb.value >= todayStr;
+                }
+            });
+        }
+
+        function saveBatchPlan() {
+            const selectedDateCheckboxes = Array.from(document.querySelectorAll('input[name="batchDateChoice"]:checked'));
+            if (selectedDateCheckboxes.length === 0) {
+                alert('適用する日付を1日以上選択してください。');
+                return;
+            }
+
+            const planItems = {};
+            let hasAnyQuantity = false;
+            const disabledHoseIds = [];
+
+            state.hoseTypes.forEach(h => {
+                const disableCb = document.getElementById(`batch_disable_${h.id}`);
+                if (disableCb && disableCb.checked) {
+                    disabledHoseIds.push(h.id);
+                }
+
+                const bEl = document.getElementById(`batch_b_${h.id}`);
+                const pEl = document.getElementById(`batch_p_${h.id}`);
+                const b = bEl ? Math.max(0, parseInt(bEl.value) || 0) : 0;
+                const p = pEl ? Math.max(0, parseInt(pEl.value) || 0) : 0;
+                if (b > 0 || p > 0) hasAnyQuantity = true;
+                planItems[h.id] = { b, p };
+            });
+
+            selectedDateCheckboxes.forEach(cb => {
+                const dateStr = cb.value;
+                if (!state.daySettings[dateStr]) {
+                    state.daySettings[dateStr] = { disabledHoseIds: [], isPlanSet: false };
+                }
+
+                // Apply disabled hoses
+                state.daySettings[dateStr].disabledHoseIds = Array.from(new Set([
+                    ...(state.daySettings[dateStr].disabledHoseIds || []),
+                    ...disabledHoseIds
+                ]));
+
+                // Apply plan if quantity provided
+                if (hasAnyQuantity) {
+                    state.plans[dateStr] = JSON.parse(JSON.stringify(planItems));
+                    state.daySettings[dateStr].isPlanSet = true;
+                }
+            });
+
+            saveData();
+            updateUI();
+            closeBatchPlanModal();
         }
 
         // Prediction & Pace Logic (Dynamic Hose Filtering + Calendar Integration)
