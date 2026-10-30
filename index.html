@@ -14,6 +14,14 @@
     </style>
 </head>
 <body class="text-gray-800 p-3 md:p-8 max-w-5xl mx-auto">
+    <!-- Pull to Refresh Indicator (Mobile) -->
+    <div id="ptrIndicator" class="fixed top-2 left-0 right-0 flex justify-center items-center z-50 pointer-events-none -translate-y-16 transition-transform duration-150 ease-out">
+        <div class="bg-white/95 backdrop-blur-md border border-gray-200/80 shadow-lg rounded-full px-4 py-2 flex items-center gap-2 text-xs font-bold text-gray-700">
+            <span id="ptrIcon" class="inline-block transition-transform duration-200 text-blue-600 text-sm">↓</span>
+            <span id="ptrText">引っ張って更新</span>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
@@ -1088,7 +1096,110 @@
             closeSettings();
         }
 
-        window.onload = init;
+        // Pull to Refresh Implementation (Mobile)
+        function setupPullToRefresh() {
+            const ptr = document.getElementById('ptrIndicator');
+            const icon = document.getElementById('ptrIcon');
+            const text = document.getElementById('ptrText');
+            
+            let startY = 0;
+            let startX = 0;
+            let isPulling = false;
+            let canPull = false;
+            let pullDistance = 0;
+            const threshold = 65; // Pull distance needed to trigger refresh
+
+            window.addEventListener('touchstart', (e) => {
+                // Only enable when at the very top of the page and settings modal is not open
+                const modalOpen = document.getElementById('settingsModal').classList.contains('active');
+                if (window.scrollY <= 0 && !modalOpen) {
+                    canPull = true;
+                    startY = e.touches[0].clientY;
+                    startX = e.touches[0].clientX;
+                    isPulling = false;
+                    pullDistance = 0;
+                } else {
+                    canPull = false;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!canPull) return;
+
+                const currentY = e.touches[0].clientY;
+                const currentX = e.touches[0].clientX;
+                const diffY = currentY - startY;
+                const diffX = currentX - startX;
+
+                // If moving horizontally more than vertically, ignore
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    canPull = false;
+                    return;
+                }
+
+                // If pulling downwards from top
+                if (diffY > 0 && window.scrollY <= 0) {
+                    isPulling = true;
+                    // Apply resistance formula
+                    pullDistance = Math.min(100, Math.pow(diffY, 0.82) * 1.8);
+                    
+                    ptr.style.transition = 'none';
+                    ptr.style.transform = `translateY(${pullDistance - 64}px)`;
+
+                    if (pullDistance >= threshold) {
+                        icon.style.transform = 'rotate(180deg)';
+                        text.innerText = '離して更新';
+                        text.className = 'text-blue-600 font-extrabold';
+                    } else {
+                        icon.style.transform = 'rotate(0deg)';
+                        text.innerText = '引っ張って更新';
+                        text.className = 'text-gray-700 font-bold';
+                    }
+
+                    if (e.cancelable && diffY > 15) {
+                        e.preventDefault();
+                    }
+                } else {
+                    isPulling = false;
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchend', () => {
+                if (!canPull || !isPulling) return;
+                canPull = false;
+                isPulling = false;
+
+                ptr.style.transition = 'transform 0.25s ease-out';
+
+                if (pullDistance >= threshold) {
+                    // Trigger refresh
+                    ptr.style.transform = 'translateY(16px)';
+                    icon.style.transform = 'rotate(0deg)';
+                    icon.innerHTML = '<span class="inline-block animate-spin">🔄</span>';
+                    text.innerText = '更新中...';
+                    text.className = 'text-blue-600 font-extrabold';
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 350);
+                } else {
+                    // Reset back to hidden
+                    ptr.style.transform = 'translateY(-64px)';
+                    setTimeout(() => {
+                        icon.innerText = '↓';
+                        icon.style.transform = 'rotate(0deg)';
+                        text.innerText = '引っ張って更新';
+                        text.className = 'text-gray-700 font-bold';
+                    }, 250);
+                }
+                pullDistance = 0;
+            }, { passive: true });
+        }
+
+        window.onload = () => {
+            init();
+            setupPullToRefresh();
+        };
     </script>
 </body>
 </html>
